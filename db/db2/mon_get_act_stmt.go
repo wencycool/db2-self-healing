@@ -17,6 +17,7 @@ type MonGetActStmt struct {
 	StmtNo    int       `column:"STMTNO"`
 	CpuTime   int       `column:"TOTAL_CPU_TIME"`
 	ActState  string    `column:"ACTIVITY_STATE"`
+	NestLevel int       `column:"NESTING_LEVEL"` //记录嵌套层深，值越大说明被调用的层数越深
 }
 
 func NewMonGetActStmt() *MonGetActStmt {
