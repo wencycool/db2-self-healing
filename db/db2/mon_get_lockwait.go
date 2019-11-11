@@ -51,6 +51,9 @@ func GetMonGetLockWaitList(str string) []*MonGetLockWait {
 			continue
 		}
 		d := NewMonGetLockWait()
+		d.tabname = ""
+		d.start_flag = ""
+		d.end_flag = ""
 		if err := renderStruct(d, line); err != nil {
 			continue
 		}

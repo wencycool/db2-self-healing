@@ -50,6 +50,9 @@ func GetMonGetUtilList(str string) []*MonGetUtil {
 			continue
 		}
 		d := NewMonGetUtil()
+		d.tabname = ""
+		d.start_flag = ""
+		d.end_flag = ""
 		if err := renderStruct(d, line); err != nil {
 			continue
 		}

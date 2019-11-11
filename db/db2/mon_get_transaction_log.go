@@ -42,6 +42,9 @@ func GetMonGetTrxLogList(str string) []*MonGetTrxLog {
 			continue
 		}
 		d := NewMonGetTrxLog()
+		d.tabname = ""
+		d.start_flag = ""
+		d.end_flag = ""
 		if err := renderStruct(d, line); err != nil {
 			continue
 		}

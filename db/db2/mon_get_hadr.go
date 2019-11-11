@@ -45,6 +45,9 @@ func GetMonGetHadrList(str string) []*MonGetHadr {
 			continue
 		}
 		d := NewMonGetHadr()
+		d.tabname = ""
+		d.start_flag = ""
+		d.end_flag = ""
 		if err := renderStruct(d, line); err != nil {
 			continue
 		}

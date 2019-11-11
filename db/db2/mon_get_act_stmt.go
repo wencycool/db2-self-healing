@@ -56,6 +56,9 @@ func GetMonGetActStmtList(str string) []*MonGetActStmt {
 			continue
 		}
 		d := NewMonGetActStmt()
+		d.tabname = ""
+		d.start_flag = ""
+		d.end_flag = ""
 		if err := renderStruct(d, line); err != nil {
 			continue
 		}

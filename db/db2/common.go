@@ -99,7 +99,12 @@ func renderStruct(ptr interface{}, str string) error {
 				}
 
 			case "string":
-				v.SetString(fields[i])
+				if fields[i] == "-" {
+					v.SetString("")
+				} else {
+					v.SetString(fields[i])
+				}
+
 			case "time.Time":
 				//如果是时间格式则进行时间格式转换
 				if fields[i] == "-" {

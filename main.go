@@ -17,7 +17,7 @@ func main() {
 	log.SetLevel(logrus.InfoLevel)
 	log.SetFormatter(&logrus.TextFormatter{})
 	db2.LogRegister(log)
-	a, b, c, d, e, f, err := db2.CollectData("sample", time.Duration(time.Second*10))
+	a, b, c, d, e, f, g, err := db2.CollectData("sample", time.Duration(time.Second*10))
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -38,6 +38,9 @@ func main() {
 	}
 	for _, i := range f {
 		fmt.Println(i.ObjName, i.UtilDetail)
+	}
+	for _, i := range g {
+		fmt.Println(i)
 	}
 
 }
