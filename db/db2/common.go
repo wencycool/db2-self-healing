@@ -60,7 +60,7 @@ func genSql(m interface{}) string {
 
 }
 
-//将一行记录渲染到一个结构体中
+//将一行记录渲染到一个结构体中,以空格为分隔符，如果文本数量大于结构体字段数量，那么把所有剩余文本列赋予最后一个结构体属性中
 func renderStruct(ptr interface{}, str string) error {
 	fields := strings.Fields(strings.TrimSpace(str))
 	numFields := len(fields)
@@ -73,10 +73,13 @@ func renderStruct(ptr interface{}, str string) error {
 		}
 	}
 	//查看结构体中包含column的字段是否和ptr_fields_nbr一样多
-	if numFields != len(ptr_fields_nbr) {
-		msg := "行中列数和结构体中字段个数不同,name:" + reflect.TypeOf(ptr).Elem().Name()
+	if numFields < len(ptr_fields_nbr) {
+		msg := "行中列数小于结构体中字段个数,name:" + reflect.TypeOf(ptr).Elem().Name()
 		log.Warn(msg)
 		return errors.New(msg)
+	} else if numFields > len(ptr_fields_nbr) {
+		fields = append(fields[:len(ptr_fields_nbr)-1], strings.Join(fields[len(ptr_fields_nbr)-1:numFields-1], " "))
+		numFields = len(fields)
 	}
 	for i := 0; i < numFields; i++ {
 		//查看ptr中字段的类型看是否需要进行转换

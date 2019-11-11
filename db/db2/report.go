@@ -12,13 +12,16 @@ import (
 
 //获取所有基础数据
 //设置5秒的超时时间
-func CollectData(db string, duration time.Duration) ([]*MonGetActStmt, []*MonGetTrxLog, []*MonGetHadr, []*MonGetCurUow, []*MonGetLockWait, error) {
+func CollectData(db string, duration time.Duration) ([]*MonGetActStmt, []*MonGetTrxLog, []*MonGetHadr, []*MonGetCurUow, []*MonGetLockWait, []*MonGetUtil, error) {
 	mon_get_act_stmt := NewMonGetActStmt()
 	mon_get_trx_log := NewMonGetTrxLog()
 	mon_get_hdr := NewMonGetHadr()
 	mon_get_cur_uow := NewMonGetCurUow()
 	mon_get_lockwait := NewMonGetLockWait()
-	sql_text_list := []string{mon_get_act_stmt.GetSqlText(), mon_get_trx_log.GetSqlText(), mon_get_hdr.GetSqlText(), mon_get_cur_uow.GetSqlText(), mon_get_lockwait.GetSqlText()}
+	mon_get_util := NewMonGetUtil()
+	sql_text_list := []string{mon_get_act_stmt.GetSqlText(), mon_get_trx_log.GetSqlText(),
+		mon_get_hdr.GetSqlText(), mon_get_cur_uow.GetSqlText(),
+		mon_get_lockwait.GetSqlText(), mon_get_util.GetSqlText()}
 	cmd := exec.Command("db2", "+p", "-x", "-t")
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true} //设置进程组,方便杀掉相关子进程
 	var in bytes.Buffer
@@ -45,10 +48,10 @@ func CollectData(db string, duration time.Duration) ([]*MonGetActStmt, []*MonGet
 		}
 	}
 	if err != nil {
-		return nil, nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, err
 	}
 	return GetMonGetActStmtList(result), GetMonGetTrxLogList(result),
 		GetMonGetHadrList(result), GetMonGetCurUowList(result),
-		GetMonGetLockWaitList(result), nil
+		GetMonGetLockWaitList(result), GetMonGetUtilList(result), nil
 
 }

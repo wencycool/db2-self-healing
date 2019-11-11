@@ -5,8 +5,7 @@ import (
 	"time"
 )
 
-//获取当前正在执行的uow事务，只包含未做提交的所有事务
-
+//获取当前正在执行的uow事务，只包含未做提交的所有事务,对于runstats，reorg等util是事务，但是不存在于act中,mon_get_agent表中的REQUEST_TYPE不准确，不能表达出reorg，runstats等作业
 type MonGetCurUow struct {
 	MataData
 	SnapTime         time.Time `column:"CURRENT TIMESTAMP"`
@@ -16,8 +15,12 @@ type MonGetCurUow struct {
 	AuthId           string    `column:"SESSION_AUTH_ID"`
 	DDLSqlStmts      int       `column:"DDL_SQL_STMTS"`
 	NumLocksHeld     int       `column:"NUM_LOCKS_HELD"`
+	SinceLastCmtSqls int       `column:"SQL_REQS_SINCE_COMMIT"`
 	UowLogSpaceUsed  int       `column:"UOW_LOG_SPACE_USED"`
 	LastExecutableId string    `column:"LAST_EXECUTABLE_ID"`
+	TotalRunstats    int       `column:"TOTAL_RUNSTATS"`
+	TotalReorgs      int       `column:"TOTAL_REORGS"`
+	TotalLoads       int       `column:"TOTAL_LOADS"`
 }
 
 func NewMonGetCurUow() *MonGetCurUow {
