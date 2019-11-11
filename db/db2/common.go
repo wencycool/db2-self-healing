@@ -37,6 +37,7 @@ type MataData struct {
 	rep        string
 }
 
+//解析结构体指针，生成字段
 func reflectMonGet(ptr interface{}) string {
 	colnameList := make([]string, 0)
 	numFields := reflect.TypeOf(ptr).Elem().NumField()

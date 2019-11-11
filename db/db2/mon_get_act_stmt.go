@@ -18,6 +18,7 @@ type MonGetActStmt struct {
 	CpuTime   int       `column:"TOTAL_CPU_TIME"`
 	ActState  string    `column:"ACTIVITY_STATE"`
 	NestLevel int       `column:"NESTING_LEVEL"` //记录嵌套层深，值越大说明被调用的层数越深
+	RowsRead  int       `column:"ROWS_READ"`
 }
 
 func NewMonGetActStmt() *MonGetActStmt {
@@ -40,6 +41,9 @@ func GetMonGetActStmtList(str string) []*MonGetActStmt {
 	start := strings.Index(str, m.start_flag) + len(m.start_flag)
 	stop := strings.Index(str, m.end_flag)
 	for _, line := range strings.Split(str[start:stop], "\n") {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
 		d := NewMonGetActStmt()
 		if err := renderStruct(d, line); err != nil {
 			continue

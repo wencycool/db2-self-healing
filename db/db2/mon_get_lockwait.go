@@ -47,6 +47,9 @@ func GetMonGetLockWaitList(str string) []*MonGetLockWait {
 	start := strings.Index(str, m.start_flag) + len(m.start_flag)
 	stop := strings.Index(str, m.end_flag)
 	for _, line := range strings.Split(str[start:stop], "\n") {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
 		d := NewMonGetLockWait()
 		if err := renderStruct(d, line); err != nil {
 			continue
