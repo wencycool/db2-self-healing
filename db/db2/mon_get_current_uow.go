@@ -1,7 +1,6 @@
 package db2
 
 import (
-	"fmt"
 	"strings"
 	"time"
 )
@@ -43,7 +42,6 @@ func GetMonGetCurUowList(str string) []*MonGetCurUow {
 	for _, line := range strings.Split(str[start:stop], "\n") {
 		d := NewMonGetCurUow()
 		if err := renderStruct(d, line); err != nil {
-			fmt.Println(err)
 			continue
 		}
 		ms = append(ms, d)

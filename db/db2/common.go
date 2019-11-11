@@ -1,18 +1,29 @@
 package db2
 
 import (
+	"errors"
+	"fmt"
+	logrus "github.com/sirupsen/logrus"
 	"reflect"
+	"strconv"
 	"strings"
+	"time"
 )
+
+var log *logrus.Logger
+
+func init() {
+	if log == nil {
+		log = logrus.New()
+		log.SetLevel(logrus.PanicLevel)
+	}
+}
+func LogRegister(logger *logrus.Logger) {
+	log = logger
+}
 
 //db2在调用db2命令的时候每一个session就第一次调用比较慢，后续都较快，因为可以每次都获取结果，也可以放到一起批量生成结果进行调用
 //所有结果中不可用有空结果，不可以有换行符
-import (
-	"errors"
-	"fmt"
-	"strconv"
-	"time"
-)
 
 var mon_get_start_flag = "_start"
 var mon_get_end_flag = "_end"
@@ -52,7 +63,6 @@ func genSql(m interface{}) string {
 func renderStruct(ptr interface{}, str string) error {
 	fields := strings.Fields(strings.TrimSpace(str))
 	numFields := len(fields)
-
 	ptr_numFields := reflect.TypeOf(ptr).Elem().NumField()
 	//记录包含column tag的字段
 	ptr_fields_nbr := make([]int, 0)
@@ -63,7 +73,9 @@ func renderStruct(ptr interface{}, str string) error {
 	}
 	//查看结构体中包含column的字段是否和ptr_fields_nbr一样多
 	if numFields != len(ptr_fields_nbr) {
-		return errors.New("行中列数和结构体中字段个数不同,name:" + reflect.TypeOf(ptr).Elem().Name())
+		msg := "行中列数和结构体中字段个数不同,name:" + reflect.TypeOf(ptr).Elem().Name()
+		log.Warn(msg)
+		return errors.New(msg)
 	}
 	for i := 0; i < numFields; i++ {
 		//查看ptr中字段的类型看是否需要进行转换

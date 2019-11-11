@@ -18,19 +18,21 @@ func CollectData(db string, duration time.Duration) ([]*MonGetActStmt, []*MonGet
 	mon_get_hdr := NewMonGetHadr()
 	mon_get_cur_uow := NewMonGetCurUow()
 	mon_get_lockwait := NewMonGetLockWait()
-	fmt.Println(mon_get_lockwait.GetSqlText())
 	sql_text_list := []string{mon_get_act_stmt.GetSqlText(), mon_get_trx_log.GetSqlText(), mon_get_hdr.GetSqlText(), mon_get_cur_uow.GetSqlText(), mon_get_lockwait.GetSqlText()}
 	cmd := exec.Command("db2", "+p", "-x", "-t")
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true} //设置进程组,方便杀掉相关子进程
 	var in bytes.Buffer
 	cmd.Stdin = &in
+	sql_text := strings.Join(sql_text_list, "")
+	log.Debug(sql_text)
 	in.WriteString(fmt.Sprintf("connect to %s ;\n", db))
-	in.WriteString(strings.Join(sql_text_list, ""))
+	in.WriteString(sql_text)
 	//设置超时
 	time.AfterFunc(duration, func() {
 		//判断pid是否大于0，如果不大于0，则不进行杀掉
 		if cmd.Process.Pid > 0 {
-			syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+			err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
+			log.Error(err)
 		}
 
 	})

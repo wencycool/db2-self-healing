@@ -2,12 +2,21 @@ package main
 
 import (
 	"fmt"
-	"log"
+	"github.com/keepeye/logrus-filename"
+	"github.com/sirupsen/logrus"
 	"my/db/db2"
 	"time"
 )
 
 func main() {
+	var log *logrus.Logger
+	log = logrus.New()
+	filenameHook := filename.NewHook()
+	filenameHook.Field = "line"
+	log.AddHook(filenameHook)
+	log.SetLevel(logrus.InfoLevel)
+	log.SetFormatter(&logrus.TextFormatter{})
+	db2.LogRegister(log)
 	a, b, c, d, e, err := db2.CollectData("sample", time.Duration(time.Second*10))
 	if err != nil {
 		log.Fatal(err)
