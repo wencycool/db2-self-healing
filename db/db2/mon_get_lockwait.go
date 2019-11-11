@@ -30,7 +30,7 @@ type MonGetLockWait struct {
 func NewMonGetLockWait() *MonGetLockWait {
 	m := new(MonGetLockWait)
 	m.rep = mon_get_rep
-	m.tabname = "TABLE(MON_GET_ACTIVITY(NULL, -1))"
+	m.tabname = "TABLE(MON_GET_APPL_LOCKWAIT(NULL, -1))"
 	m.start_flag = m.tabname + mon_get_start_flag
 	m.end_flag = m.tabname + mon_get_end_flag
 	return m

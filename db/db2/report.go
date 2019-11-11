@@ -18,6 +18,7 @@ func CollectData(db string, duration time.Duration) ([]*MonGetActStmt, []*MonGet
 	mon_get_hdr := NewMonGetHadr()
 	mon_get_cur_uow := NewMonGetCurUow()
 	mon_get_lockwait := NewMonGetLockWait()
+	fmt.Println(mon_get_lockwait.GetSqlText())
 	sql_text_list := []string{mon_get_act_stmt.GetSqlText(), mon_get_trx_log.GetSqlText(), mon_get_hdr.GetSqlText(), mon_get_cur_uow.GetSqlText(), mon_get_lockwait.GetSqlText()}
 	cmd := exec.Command("db2", "+p", "-x", "-t")
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true} //设置进程组,方便杀掉相关子进程
