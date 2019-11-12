@@ -17,12 +17,25 @@ func main() {
 	log.SetLevel(logrus.InfoLevel)
 	log.SetFormatter(&logrus.TextFormatter{})
 	db2.LogRegister(log)
-	_, _, _, _, _, _, _, _ = db2.CollectPerfData("sample", time.Duration(time.Second*10))
-	//获取参数信息
-	dbcfg, _ := db2.GetMonGetDbCfgMap()
-	fmt.Println(dbcfg["logarchmeth1"].Name, dbcfg["logarchmeth1"].ValFlag, dbcfg["logarchmeth1"].Value)
-	dbmcfg, err := db2.GetMonGetDbmCfgMap()
-	fmt.Println(err)
-	fmt.Println(dbmcfg)
+	acts, _, _, _, _, _, _, _ := db2.CollectPerfData("sample", time.Duration(time.Second*10))
+	for _, act := range acts {
+		fmt.Println(act.HexId, act.PlanId, act.TotalActTime, act.RowsRead, act.CpuTime, act.SnapTime)
+		fmt.Println("对每一个SQL进行解析，检查执行计划")
+		if act.HexId == "" {
+			continue
+		}
+		expln, err := db2.NewMonGetExplain(act.HexId)
+		if err != nil {
+			fmt.Println(err)
+		} else {
+			if objs, err := expln.GetObj(); err != nil {
+				fmt.Println(err)
+			} else {
+				for _, obj := range objs {
+					fmt.Println(obj.ObjType, obj.ObjName, obj.RowCount, obj.SRowsModified, obj.FUKCard)
+				}
+			}
+		}
+	}
 
 }

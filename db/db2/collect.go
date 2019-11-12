@@ -24,6 +24,7 @@ func CollectPerfData(db string, duration time.Duration) ([]*MonGetActStmt, []*Mo
 		mon_get_hdr.GetSqlText(), mon_get_cur_uow.GetSqlText(),
 		mon_get_lockwait.GetSqlText(), mon_get_util.GetSqlText(),
 		mon_get_cur_uow_extend.GetSqlText()}
+	t1 := time.Now()
 	cmd := exec.Command("db2", "+p", "-x", "-t")
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true} //设置进程组,方便杀掉相关子进程
 	var in bytes.Buffer
@@ -35,13 +36,14 @@ func CollectPerfData(db string, duration time.Duration) ([]*MonGetActStmt, []*Mo
 	//设置超时
 	time.AfterFunc(duration, func() {
 		//判断pid是否大于0，如果不大于0，则不进行杀掉
-		if cmd.Process.Pid > 0 {
+		if cmd.Process.Pid > 0 && !cmd.ProcessState.Exited() {
 			err := syscall.Kill(-cmd.Process.Pid, syscall.SIGKILL)
 			log.Error(err)
 		}
 
 	})
 	bs, err := cmd.CombinedOutput()
+	log.Infof("获取表结构一共花费时间为:%s\n", time.Now().Sub(t1).String())
 	result := string(bs)
 	//对于sql语句，如果结果大于0则是告警，可以忽略
 	if err != nil {
