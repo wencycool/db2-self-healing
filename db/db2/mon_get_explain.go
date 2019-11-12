@@ -33,48 +33,49 @@ CO	Column-organized table
 */
 //获取执行计划信息
 type MonGetExplainObj struct {
-	ExplnReq      string        `column:"EXPLAIN_REQUESTER"` //explain的发起者
-	ExplnTime     string        `column:"EXPLAIN_TIME"`
-	SrcName       string        `column:"SOURCE_NAME"`
-	SrcSchema     string        `column:"SOURCE_SCHEMA"`
-	SrcVersion    string        `column:"SOURCE_VERSION"`
-	ExplnLevel    string        `column:"EXPLAIN_LEVEL"`
-	StmtNo        int           `column:"STMTNO"`
-	SectionNo     int           `column:"SECTNO"`
-	ObjSchema     string        `column:"OBJECT_SCHEMA"`
-	ObjName       string        `column:"OBJECT_NAME"`
-	ObjType       string        `column:"OBJECT_TYPE"`
-	CreatTime     time.Duration `column:"CREATE_TIME"`     //对象创建时间，如果是表函数则为null
-	StatsTime     time.Duration `column:"STATISTICS_TIME"` //统计信息发起时间，如果对象不存在则为null
-	ColCount      int           `column:"COLUMN_COUNT"`    //字段个数
-	RowCount      int           `column:"ROW_COUNT"`       //统计信息表card值
-	TbspName      string        `column:"TABLESPACE_NAME"`
-	F1KCard       int           `column:"FIRSTKEYCARD"` //Number of distinct first key values. Set to -1 for a table, table function, or if this statistic is not available.
-	F2KCard       int           `column:"FIRST2KEYCARD"`
-	F3KCard       int           `column:"FIRST3KEYCARD"`
-	FUKCard       int           `column:"FULLKEYCARD"`
-	TabReads      int           //ROWS_READ 表被扫描的次数
-	TabScans      int           //表扫描次数,只有在ObjType='TA' 即table的时候才会获取
-	SRowsModified int           //自动上次统计信息依赖，表的修改记录数,只有在ObjType='TA' 即table的时候才会获取
-	DataLPages    int           //表的逻辑page页数，包括表和索引的page页面,只有在ObjType='TA' 即table的时候才会获取
+	SnapTime      time.Time `column:"CURRENT TIMESTAMP"`
+	ExplnReq      string    `column:"EXPLAIN_REQUESTER"` //explain的发起者
+	ExplnTime     string    `column:"EXPLAIN_TIME"`
+	SrcName       string    `column:"SOURCE_NAME"`
+	SrcSchema     string    `column:"SOURCE_SCHEMA"`
+	ExplnLevel    string    `column:"EXPLAIN_LEVEL"`
+	StmtNo        int       `column:"STMTNO"`
+	SectionNo     int       `column:"SECTNO"`
+	ObjSchema     string    `column:"OBJECT_SCHEMA"`
+	ObjName       string    `column:"OBJECT_NAME"`
+	ObjType       string    `column:"OBJECT_TYPE"`
+	CreatTime     time.Time `column:"CREATE_TIME"`     //对象创建时间，如果是表函数则为null
+	StatsTime     time.Time `column:"STATISTICS_TIME"` //统计信息发起时间，如果对象不存在则为null
+	ColCount      int       `column:"COLUMN_COUNT"`    //字段个数
+	RowCount      int       `column:"ROW_COUNT"`       //统计信息表card值
+	TbspName      string    `column:"TABLESPACE_NAME"`
+	F1KCard       int       `column:"FIRSTKEYCARD"` //Number of distinct first key values. Set to -1 for a table, table function, or if this statistic is not available.
+	F2KCard       int       `column:"FIRST2KEYCARD"`
+	F3KCard       int       `column:"FIRST3KEYCARD"`
+	FUKCard       int       `column:"FULLKEYCARD"`
+	TabReads      int       //ROWS_READ 表被扫描的次数
+	TabScans      int       //表扫描次数,只有在ObjType='TA' 即table的时候才会获取
+	SRowsModified int       //自动上次统计信息依赖，表的修改记录数,只有在ObjType='TA' 即table的时候才会获取
+	DataLPages    int       //表的逻辑page页数，包括表和索引的page页面,只有在ObjType='TA' 即table的时候才会获取
 
 }
 
 //获取SQL的执行计划信息
 type MonGetExplain struct {
-	HexId       string `column:"executable_id"`
-	ExplnSchema string `column:"EXPLAIN_SCHEMA"`
-	ExplnReq    string `column:"explain_requester"`
-	ExplnTime   string `column:"EXPLAIN_TIME"`
-	SrcName     string `column:"SOURCE_NAME"`
-	SrcSchema   string `column:"SOURCE_SCHEMA"`
-	SrcVersion  string `column:"SOURCE_VERSION"`
+	SnapTime    time.Time `column:"CURRENT TIMESTAMP"`
+	HexId       string    `column:"executable_id"`
+	ExplnSchema string    `column:"EXPLAIN_SCHEMA"`
+	ExplnReq    string    `column:"explain_requester"`
+	ExplnTime   string    `column:"EXPLAIN_TIME"`
+	SrcName     string    `column:"SOURCE_NAME"`
+	SrcSchema   string    `column:"SOURCE_SCHEMA"`
+	SrcVersion  string    `column:"SOURCE_VERSION"`
 }
 
 //返回执行计划的结构体和错误信息
 func NewMonGetExplain(hexid string) (*MonGetExplain, error) {
 	self := new(MonGetExplain)
-	argSql := fmt.Sprintf("CALL EXPLAIN_FROM_SECTION(%s,'M',NULL,0,'%s',?,?,?,?,?", hexid, strings.ToUpper(GetCurInstanceName()))
+	argSql := fmt.Sprintf("CALL EXPLAIN_FROM_SECTION(%s,'M',NULL,0,'%s',?,?,?,?,?)", hexid, strings.ToUpper(GetCurInstanceName()))
 	cmd := exec.Command("db2", "-x", argSql)
 	bs, err := cmd.CombinedOutput()
 	if err != nil {
@@ -112,8 +113,8 @@ func NewMonGetExplain(hexid string) (*MonGetExplain, error) {
 //获取执行计划的SQL相关的表以及索引等对象信息
 func (m *MonGetExplain) GetObj() ([]*MonGetExplainObj, error) {
 	col_str := reflectMonGet(new(MonGetExplainObj))
-	argSql := genSql(fmt.Sprintf("select %s from EXPLAIN_OBJECT where EXPLAIN_REQUESTER='%s' and EXPLAIN_TIME='%s' with ur",
-		col_str, m.ExplnReq, m.ExplnTime))
+	argSql := fmt.Sprintf("select %s from EXPLAIN_OBJECT where EXPLAIN_REQUESTER='%s' and EXPLAIN_TIME='%s' with ur",
+		col_str, m.ExplnReq, m.ExplnTime)
 	cmd := exec.Command("db2", "-x", argSql)
 	//找到相关字段以后进行字段解析
 	bs, err := cmd.CombinedOutput()
@@ -136,9 +137,10 @@ func (m *MonGetExplain) GetObj() ([]*MonGetExplainObj, error) {
 	for _, d := range ms {
 		//如果是普通表或者分区表，则获取表中信息
 		if d.ObjType == "TA" || d.ObjType == "DP" {
-			argSqlgetTable := fmt.Sprintf("select TABLE_SCANS,ROWS_READ,"+
+			argSqlgetTable := fmt.Sprintf("select sum(TABLE_SCANS) as TABLE_SCANS,sum(ROWS_READ) as ROWS_READ,"+
 				"sum(DATA_OBJECT_L_PAGES+INDEX_OBJECT_L_PAGES)as tabpages,"+
-				"STATS_ROWS_MODIFIED from table(MON_GET_TABLE('%s','%s',-1)) as t group by TABSCHEMA,TABNAME,MEMBER with ur",
+				"sum(STATS_ROWS_MODIFIED) as STATS_ROWS_MODIFIED from "+
+				"table(MON_GET_TABLE('%s','%s',-1)) as t group by TABSCHEMA,TABNAME,MEMBER with ur",
 				d.ObjSchema, d.ObjName)
 			cmd := exec.Command("db2", "-x", argSqlgetTable)
 			bs, err := cmd.CombinedOutput()
@@ -146,9 +148,12 @@ func (m *MonGetExplain) GetObj() ([]*MonGetExplainObj, error) {
 				log.Warn(err)
 			}
 			for _, line := range strings.Split(string(bs), "\n") {
+				if strings.TrimSpace(line) == "" {
+					continue
+				}
 				fields := strings.Fields(line)
 				if len(fields) != 4 {
-					log.Warn(line + " Not equal than :" + strconv.Itoa(len(fields)))
+					log.Warn(line + " fields Not equal than :" + strconv.Itoa(len(fields)))
 					continue
 				}
 				if scans, err := strconv.Atoi(fields[0]); err == nil {

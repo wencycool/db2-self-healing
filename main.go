@@ -22,7 +22,19 @@ func main() {
 		log.Fatal(err)
 	}
 	for _, i := range a {
-		fmt.Println(i)
+		fmt.Println("开始获取explain信息")
+		expln, err := db2.NewMonGetExplain(i.HexId)
+		if err != nil {
+			log.Println("ooooooooo", err)
+		} else {
+			objs, err := expln.GetObj()
+			if err != nil {
+				log.Println("xxxxxxxx", err)
+			}
+			for _, obj := range objs {
+				fmt.Printf("%v\n", *obj)
+			}
+		}
 	}
 	for _, i := range b {
 		fmt.Println(i)

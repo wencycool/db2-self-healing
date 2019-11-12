@@ -80,8 +80,9 @@ func renderStruct(ptr interface{}, str string) error {
 	}
 	//查看结构体中包含column的字段是否和ptr_fields_nbr一样多
 	if numFields < len(ptr_fields_nbr) {
-		msg := "行中列数小于结构体中字段个数,name:" + reflect.TypeOf(ptr).Elem().Name()
-		log.Warn(msg)
+		msg := fmt.Sprintf("name:%s,行中列数小于结构体中字段个数,列数：%d,结构体字段数:%d,行内容:%s\n",
+			reflect.TypeOf(ptr).Elem().Name(), numFields, len(ptr_fields_nbr), strings.TrimSpace(str))
+		log.Debug(msg)
 		return errors.New(msg)
 	} else if numFields > len(ptr_fields_nbr) {
 		fields = append(fields[:len(ptr_fields_nbr)-1], strings.Join(fields[len(ptr_fields_nbr)-1:numFields-1], " "))

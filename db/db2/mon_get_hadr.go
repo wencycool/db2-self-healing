@@ -36,7 +36,7 @@ func (m *MonGetHadr) GetSqlText() string {
 
 //通过从数据库返回的结果，生成结果集
 func GetMonGetHadrList(str string) []*MonGetHadr {
-	m := NewMonGetTrxLog()
+	m := NewMonGetHadr()
 	ms := make([]*MonGetHadr, 0)
 	start := strings.Index(str, m.start_flag) + len(m.start_flag)
 	stop := strings.Index(str, m.end_flag)
