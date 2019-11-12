@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"os/exec"
+	"strconv"
 	"strings"
 	"time"
 )
@@ -32,26 +33,31 @@ CO	Column-organized table
 */
 //获取执行计划信息
 type MonGetExplainObj struct {
-	ExplnReq   string        `column:"EXPLAIN_REQUESTER"` //explain的发起者
-	ExplnTime  string        `column:"EXPLAIN_TIME"`
-	SrcName    string        `column:"SOURCE_NAME"`
-	SrcSchema  string        `column:"SOURCE_SCHEMA"`
-	SrcVersion string        `column:"SOURCE_VERSION"`
-	ExplnLevel string        `column:"EXPLAIN_LEVEL"`
-	StmtNo     int           `column:"STMTNO"`
-	SectionNo  int           `column:"SECTNO"`
-	ObjSchema  string        `column:"OBJECT_SCHEMA"`
-	ObjName    string        `column:"OBJECT_NAME"`
-	ObjType    string        `column:"OBJECT_TYPE"`
-	CreatTime  time.Duration `column:"CREATE_TIME"`     //对象创建时间，如果是表函数则为null
-	StatsTime  time.Duration `column:"STATISTICS_TIME"` //统计信息发起时间，如果对象不存在则为null
-	ColCount   int           `column:"COLUMN_COUNT"`    //字段个数
-	RowCount   int           `column:"ROW_COUNT"`       //统计信息表card值
-	TbspName   string        `column:"TABLESPACE_NAME"`
-	F1KCard    int           `column:"FIRSTKEYCARD"` //Number of distinct first key values. Set to -1 for a table, table function, or if this statistic is not available.
-	F2KCard    int           `column:"FIRST2KEYCARD"`
-	F3KCard    int           `column:"FIRST3KEYCARD"`
-	FUKCard    int           `column:"FULLKEYCARD"`
+	ExplnReq      string        `column:"EXPLAIN_REQUESTER"` //explain的发起者
+	ExplnTime     string        `column:"EXPLAIN_TIME"`
+	SrcName       string        `column:"SOURCE_NAME"`
+	SrcSchema     string        `column:"SOURCE_SCHEMA"`
+	SrcVersion    string        `column:"SOURCE_VERSION"`
+	ExplnLevel    string        `column:"EXPLAIN_LEVEL"`
+	StmtNo        int           `column:"STMTNO"`
+	SectionNo     int           `column:"SECTNO"`
+	ObjSchema     string        `column:"OBJECT_SCHEMA"`
+	ObjName       string        `column:"OBJECT_NAME"`
+	ObjType       string        `column:"OBJECT_TYPE"`
+	CreatTime     time.Duration `column:"CREATE_TIME"`     //对象创建时间，如果是表函数则为null
+	StatsTime     time.Duration `column:"STATISTICS_TIME"` //统计信息发起时间，如果对象不存在则为null
+	ColCount      int           `column:"COLUMN_COUNT"`    //字段个数
+	RowCount      int           `column:"ROW_COUNT"`       //统计信息表card值
+	TbspName      string        `column:"TABLESPACE_NAME"`
+	F1KCard       int           `column:"FIRSTKEYCARD"` //Number of distinct first key values. Set to -1 for a table, table function, or if this statistic is not available.
+	F2KCard       int           `column:"FIRST2KEYCARD"`
+	F3KCard       int           `column:"FIRST3KEYCARD"`
+	FUKCard       int           `column:"FULLKEYCARD"`
+	TabReads      int           //ROWS_READ 表被扫描的次数
+	TabScans      int           //表扫描次数,只有在ObjType='TA' 即table的时候才会获取
+	SRowsModified int           //自动上次统计信息依赖，表的修改记录数,只有在ObjType='TA' 即table的时候才会获取
+	DataLPages    int           //表的逻辑page页数，包括表和索引的page页面,只有在ObjType='TA' 即table的时候才会获取
+
 }
 
 //获取SQL的执行计划信息
@@ -126,5 +132,40 @@ func (m *MonGetExplain) GetObj() ([]*MonGetExplainObj, error) {
 		}
 		ms = append(ms, d)
 	}
+	//修改ms中mon_get_table相关字段属性
+	for _, d := range ms {
+		//如果是普通表或者分区表，则获取表中信息
+		if d.ObjType == "TA" || d.ObjType == "DP" {
+			argSqlgetTable := fmt.Sprintf("select TABLE_SCANS,ROWS_READ,"+
+				"sum(DATA_OBJECT_L_PAGES+INDEX_OBJECT_L_PAGES)as tabpages,"+
+				"STATS_ROWS_MODIFIED from table(MON_GET_TABLE('%s','%s',-1)) as t group by TABSCHEMA,TABNAME,MEMBER with ur",
+				d.ObjSchema, d.ObjName)
+			cmd := exec.Command("db2", "-x", argSqlgetTable)
+			bs, err := cmd.CombinedOutput()
+			if err != nil {
+				log.Warn(err)
+			}
+			for _, line := range strings.Split(string(bs), "\n") {
+				fields := strings.Fields(line)
+				if len(fields) != 4 {
+					log.Warn(line + " Not equal than :" + strconv.Itoa(len(fields)))
+					continue
+				}
+				if scans, err := strconv.Atoi(fields[0]); err == nil {
+					d.TabScans = scans
+				}
+				if reads, err := strconv.Atoi(fields[1]); err == nil {
+					d.TabReads = reads
+				}
+				if pages, err := strconv.Atoi(fields[2]); err == nil {
+					d.DataLPages = pages
+				}
+				if modifieds, err := strconv.Atoi(fields[3]); err == nil {
+					d.SRowsModified = modifieds
+				}
+			}
+		}
+	}
+
 	return ms, nil
 }
