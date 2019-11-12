@@ -22,7 +22,7 @@ type MonGetUtil struct {
 	ObjType        string    `column:"OBJECT_TYPE"`            //对象类型 表，索引
 	ObjSchema      string    `column:"OBJECT_SCHEMA"`
 	ObjName        string    `column:"OBJECT_NAME"`
-	UtilDetail     string    `column:"UTILITY_DETAIL"` //具体的执行语句信息
+	UtilDetail     string    `column:"REPLACE(UTILITY_DETAIL,CHR(10)||CHR(13),' ') AS UTILITY_DETAIL"` //具体的执行语句信息
 
 }
 

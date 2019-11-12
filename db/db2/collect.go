@@ -10,9 +10,9 @@ import (
 	"time"
 )
 
-//获取所有基础数据
+//获取所有性能相关数据
 //设置5秒的超时时间
-func CollectData(db string, duration time.Duration) ([]*MonGetActStmt, []*MonGetTrxLog, []*MonGetHadr, []*MonGetCurUow, []*MonGetLockWait, []*MonGetUtil, []*MonGetCurUowExtend, error) {
+func CollectPerfData(db string, duration time.Duration) ([]*MonGetActStmt, []*MonGetTrxLog, []*MonGetHadr, []*MonGetCurUow, []*MonGetLockWait, []*MonGetUtil, []*MonGetCurUowExtend, error) {
 	mon_get_act_stmt := NewMonGetActStmt()
 	mon_get_trx_log := NewMonGetTrxLog()
 	mon_get_hdr := NewMonGetHadr()
@@ -55,5 +55,10 @@ func CollectData(db string, duration time.Duration) ([]*MonGetActStmt, []*MonGet
 	return GetMonGetActStmtList(result), GetMonGetTrxLogList(result),
 		GetMonGetHadrList(result), GetMonGetCurUowList(result),
 		GetMonGetLockWaitList(result), GetMonGetUtilList(result), GetMonGetCurUowExtendList(result), nil
+
+}
+
+//获取表空间数据
+func CollectTbspData(db string, duration time.Duration) {
 
 }

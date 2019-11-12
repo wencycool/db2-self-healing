@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	logrus "github.com/sirupsen/logrus"
+	"os/user"
 	"reflect"
 	"strconv"
 	"strings"
@@ -30,6 +31,11 @@ var mon_get_end_flag = "_end"
 var mon_get_rep = ";"
 var timestamp_short_form = "2006-01-02-15.04.05.000000"
 
+func GetCurInstanceName() string {
+	u, _ := user.Current()
+	return u.Name
+}
+
 type MataData struct {
 	tabname    string
 	start_flag string
@@ -37,7 +43,7 @@ type MataData struct {
 	rep        string
 }
 
-//解析结构体指针，生成字段
+//解析结构体指针，生成字段信息
 func reflectMonGet(ptr interface{}) string {
 	colnameList := make([]string, 0)
 	numFields := reflect.TypeOf(ptr).Elem().NumField()
