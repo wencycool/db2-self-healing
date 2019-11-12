@@ -1,6 +1,7 @@
 package db2
 
 import (
+	"errors"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -52,11 +53,13 @@ type MonGetDbmCfg struct {
 func GetMonGetDbmCfgMap() (map[string]*MonGetDbmCfg, error) {
 	mp := make(map[string]*MonGetDbmCfg, 0)
 	cols := reflectMonGet(new(MonGetDbmCfg))
-	argSql := fmt.Sprintf("select %s from table(DBM_GET_CFG(-1)) AS T with ur", cols)
+	argSql := fmt.Sprintf("select %s from SYSIBMADM.DBMCFG AS T with ur", cols)
 	cmd := exec.Command("db2", "-x", argSql)
 	bs, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, err
+		msg := string(bs)
+		log.Warn(msg)
+		return nil, errors.New(msg)
 	}
 	for _, line := range strings.Split(string(bs), "\n") {
 		if strings.TrimSpace(line) == "" {
