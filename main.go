@@ -14,12 +14,13 @@ func main() {
 	filenameHook := filename.NewHook()
 	filenameHook.Field = "line"
 	log.AddHook(filenameHook)
-	log.SetLevel(logrus.InfoLevel)
+	log.SetLevel(logrus.PanicLevel)
 	log.SetFormatter(&logrus.TextFormatter{})
 	db2.LogRegister(log)
-	acts, _, _, _, _, _, _, _ := db2.CollectPerfData("sample", time.Duration(time.Second*10))
-	for _, act := range acts {
-		fmt.Println(act.HexId, act.PlanId, act.TotalActTime, act.RowsRead, act.CpuTime, act.SnapTime)
+	acts, _, _, _, locks, utils, uow_extend, _ := db2.CollectPerfData("sample", time.Duration(time.Second*10))
+	act_stmts := db2.GetMonGetActStmtAggByPlanid(acts)
+	for _, act := range act_stmts {
+		fmt.Printf("执行次数:%d，执行语句：%s\n", act.ActCount, act.HexId)
 		fmt.Println("对每一个SQL进行解析，检查执行计划")
 		if act.HexId == "" {
 			continue
@@ -37,5 +38,37 @@ func main() {
 			}
 		}
 	}
+	fmt.Println("UOW")
+	for _, uow := range uow_extend {
+		switch {
+		case uow.HexId != "":
+			fmt.Printf("SQL语句为:%s\n", db2.NewMonGetPkgCacheStmt(uow.HexId).StmtText)
+		case uow.UtilInvId != "":
+			stmt_text := ""
+			for _, u := range utils {
+				if u.UtilInvId == uow.UtilInvId {
+					stmt_text = u.StmtText
+				}
+			}
+			fmt.Printf("Util语句为:%s\n", stmt_text)
+		}
+	}
+	//打印锁等待相关信息
+	fmt.Printf("当前锁等待个数为:%d\n", len(locks))
+	if len(locks) > 0 {
+		fmt.Printf("打印当前锁等待信息\n")
+		for _, lock := range locks {
+			fmt.Printf("当前agent:%d,等待时长:%s,LockMode:%s,SQL:%s\n",
+				lock.ReqAgentTid, lock.SnapTime.Sub(lock.LockWaitStartTime).String(), lock.LockMode, db2.NewMonGetPkgCacheStmt(lock.ReqHexId).StmtText)
+			fmt.Println(*db2.NewMonGetPkgCacheStmt(lock.ReqHexId))
+		}
+		lws := db2.GetLockHeaderMap(locks)
+		if len(lws) > 0 {
+			fmt.Println("打印锁源头列表")
+			for _, v := range lws {
+				fmt.Println(v)
+			}
+		}
 
+	}
 }

@@ -23,7 +23,7 @@ type MonGetLockWait struct {
 	TbspId            int32     `column:"TBSP_ID"`
 	ReqAppHandle      int32     `column:"REQ_APPLICATION_HANDLE"`
 	ReqAgentTid       int32     `column:"REQ_AGENT_TID"`
-	ReqExecutableId   string    `column:"REQ_EXECUTABLE_ID"`
+	ReqHexId          string    `column:"REQ_EXECUTABLE_ID"`
 	HldAppHandle      int32     `column:"HLD_APPLICATION_HANDLE"` //0 代表该事务因崩溃恢复后正在执行回滚或者不一致事务，null代表无法找到该app
 }
 
@@ -63,16 +63,16 @@ func GetMonGetLockWaitList(str string) []*MonGetLockWait {
 }
 
 //从MonGetLockWait list中查找锁定等待的源头，mon_get_app_lockwait表函数本身不提供锁源头的功能
-func GetLockHeaderList(lockwait []*MonGetLockWait) []*MonGetLockWait {
-	headerlist := make([]*MonGetLockWait, 0)
+func GetLockHeaderMap(lockwait []*MonGetLockWait) map[int32]int32 {
+	headerMap := make(map[int32]int32, 0)
 	tmp_map := make(map[int32]int32) //存放当前锁等待的handle和被等待的handle
 	for _, m := range lockwait {
 		tmp_map[m.ReqAppHandle] = m.HldAppHandle
 	}
 	for _, m := range lockwait {
 		if _, ok := tmp_map[m.HldAppHandle]; !ok {
-			headerlist = append(headerlist, m)
+			headerMap[m.HldAppHandle] = m.HldAppHandle
 		}
 	}
-	return headerlist
+	return headerMap
 }

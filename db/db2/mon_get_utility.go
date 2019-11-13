@@ -19,10 +19,11 @@ type MonGetUtil struct {
 	UtilType       string    `column:"UTILITY_TYPE"`           //作业类型
 	UtilOperType   string    `column:"UTILITY_OPERATION_TYPE"` //作业操作类型,dela,full,处于哪种状态等
 	UtilInvokeType string    `column:"UTILITY_INVOKER_TYPE"`   //作业发起方式 AUTO自动，USER 人工
+	UtilInvId      string    `column:"UTILITY_INVOCATION_ID"`  //作业唯一标识符
 	ObjType        string    `column:"OBJECT_TYPE"`            //对象类型 表，索引
 	ObjSchema      string    `column:"OBJECT_SCHEMA"`
 	ObjName        string    `column:"OBJECT_NAME"`
-	UtilDetail     string    `column:"REPLACE(UTILITY_DETAIL,CHR(10)||CHR(13),' ') AS UTILITY_DETAIL"` //具体的执行语句信息
+	StmtText       string    `column:"REPLACE(UTILITY_DETAIL,CHR(10)||CHR(13),' ') AS UTILITY_DETAIL"` //具体的执行语句信息
 
 }
 
