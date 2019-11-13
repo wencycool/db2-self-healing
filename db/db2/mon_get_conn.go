@@ -8,5 +8,5 @@ type MonGetConn struct {
 }
 
 //定义记录连接分布信息，方便查询基于客户主机的连接数信息
-type MonGetConnDistr struct {
+type MonGetConnDistrib struct {
 }

@@ -1,7 +1,6 @@
 package db2
 
 import (
-	"errors"
 	"fmt"
 	"os/exec"
 	"strings"
@@ -22,14 +21,15 @@ type MonGetDbCfg struct {
 	ValFlag string `column:"VALUE_FLAGS"`
 }
 
-func GetMonGetDbCfgMap() (map[string]*MonGetDbCfg, error) {
+func GetMonGetDbCfgMap() map[string]*MonGetDbCfg {
 	mp := make(map[string]*MonGetDbCfg, 0)
 	cols := reflectMonGet(new(MonGetDbCfg))
 	argSql := fmt.Sprintf("select %s from table(DB_GET_CFG(-1)) as t with ur", cols)
 	cmd := exec.Command("db2", "-x", argSql)
 	bs, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, err
+		log.Warn(err)
+		return nil
 	}
 	for _, line := range strings.Split(string(bs), "\n") {
 		if strings.TrimSpace(line) == "" {
@@ -41,7 +41,7 @@ func GetMonGetDbCfgMap() (map[string]*MonGetDbCfg, error) {
 		}
 		mp[d.Name] = d
 	}
-	return mp, nil
+	return mp
 }
 
 type MonGetDbmCfg struct {
@@ -50,7 +50,7 @@ type MonGetDbmCfg struct {
 	ValFlag string `column:"VALUE_FLAGS"`
 }
 
-func GetMonGetDbmCfgMap() (map[string]*MonGetDbmCfg, error) {
+func GetMonGetDbmCfgMap() map[string]*MonGetDbmCfg {
 	mp := make(map[string]*MonGetDbmCfg, 0)
 	cols := reflectMonGet(new(MonGetDbmCfg))
 	argSql := fmt.Sprintf("select %s from SYSIBMADM.DBMCFG AS T with ur", cols)
@@ -59,7 +59,7 @@ func GetMonGetDbmCfgMap() (map[string]*MonGetDbmCfg, error) {
 	if err != nil {
 		msg := string(bs)
 		log.Warn(msg)
-		return nil, errors.New(msg)
+		return nil
 	}
 	for _, line := range strings.Split(string(bs), "\n") {
 		if strings.TrimSpace(line) == "" {
@@ -71,5 +71,5 @@ func GetMonGetDbmCfgMap() (map[string]*MonGetDbmCfg, error) {
 		}
 		mp[d.Name] = d
 	}
-	return mp, nil
+	return mp
 }
