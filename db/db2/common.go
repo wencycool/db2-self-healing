@@ -94,7 +94,7 @@ func renderStruct(ptr interface{}, str string) error {
 		v := reflect.ValueOf(ptr).Elem().Field(ptr_fields_nbr[i])
 		if v.CanSet() {
 			switch v_type {
-			case "int":
+			case "int", "int32", "int64":
 				if fields[i] == "-" {
 					v.SetInt(-1)
 				} else {

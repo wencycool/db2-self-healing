@@ -11,9 +11,9 @@ type MonGetTrxLog struct {
 	SnapTime    time.Time `column:"CURRENT TIMESTAMP"`
 	TotalAval   int       `column:"TOTAL_LOG_AVAILABLE"`
 	TotalUsed   int       `column:"TOTAL_LOG_USED"`
-	OldestXact  int       `column:"APPLID_HOLDING_OLDEST_XACT"`
+	OldestXact  int32     `column:"APPLID_HOLDING_OLDEST_XACT"`
 	RedoSize    int       `column:"LOG_TO_REDO_FOR_RECOVERY"` //bytes
-	FirstActLog int       `column:"FIRST_ACTIVE_LOG"`         //第一个活动日志号
+	FirstActLog int32     `column:"FIRST_ACTIVE_LOG"`         //第一个活动日志号
 	HdrWaitTime int       `column:"LOG_HADR_WAIT_TIME"`
 	HdrWaits    int       `column:"LOG_HADR_WAITS_TOTAL"`
 }

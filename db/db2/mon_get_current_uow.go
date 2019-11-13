@@ -9,8 +9,8 @@ import (
 type MonGetCurUow struct {
 	MataData
 	SnapTime         time.Time `column:"CURRENT TIMESTAMP"`
-	AppHandle        int       `column:"APPLICATION_HANDLE"`
-	UowId            int       `column:"UOW_ID"`
+	AppHandle        int32     `column:"APPLICATION_HANDLE"`
+	UowId            int32     `column:"UOW_ID"`
 	UowStartTime     time.Time `column:"UOW_START_TIME"`
 	AuthId           string    `column:"SESSION_AUTH_ID"`
 	DDLSqlStmts      int       `column:"DDL_SQL_STMTS"`
