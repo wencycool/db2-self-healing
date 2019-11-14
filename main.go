@@ -40,12 +40,16 @@ func main() {
 				fmt.Println(err)
 			} else {
 				for _, obj := range objs {
-					fmt.Println(obj.ObjType, obj.ObjName, obj.RowCount, obj.SRowsModified, obj.FUKCard)
+					fmt.Println("对象信息:", obj.ObjType, obj.ObjName, obj.RowCount, obj.SRowsModified, obj.FUKCard)
 				}
 			}
 		}
+		fmt.Printf("打印Advis信息,执行者:%-30s,执行语句:%s\n", act.AuthId, db2.NewMonGetPkgCacheStmt(act.HexId).StmtText)
+
 	}
-	fmt.Println("UOW")
+	if len(uow_extend) > 0 {
+		fmt.Println("打印UOW信息")
+	}
 	for _, uow := range uow_extend {
 		switch {
 		case uow.HexId != "":
@@ -61,19 +65,25 @@ func main() {
 		}
 	}
 	//打印锁等待相关信息
-	fmt.Printf("当前锁等待个数为:%d\n", len(locks))
 	if len(locks) > 0 {
+		fmt.Printf("当前锁等待个数为:%d\n", len(locks))
 		fmt.Printf("打印当前锁等待信息\n")
 		for _, lock := range locks {
 			fmt.Printf("当前agent:%d,等待时长:%s,LockMode:%s,SQL:%s\n",
-				lock.ReqAgentTid, lock.SnapTime.Sub(lock.LockWaitStartTime).String(), lock.LockMode, db2.NewMonGetPkgCacheStmt(lock.ReqHexId).StmtText)
-			fmt.Println(*db2.NewMonGetPkgCacheStmt(lock.ReqHexId))
+				lock.ReqAgentTid, lock.SnapTime.Sub(lock.LockWaitStartTime).String(),
+				lock.LockMode, db2.NewMonGetPkgCacheStmt(lock.ReqHexId).StmtText)
 		}
 		lws := db2.GetLockHeaderMap(locks)
 		if len(lws) > 0 {
-			fmt.Println("打印锁源头列表")
+			fmt.Println("打印锁源头列表以及语句")
+			sql := ""
 			for _, v := range lws {
-				fmt.Println(v)
+				for _, a := range acts {
+					if v == a.AppHandle {
+						sql = db2.NewMonGetPkgCacheStmt(a.HexId).StmtText
+					}
+				}
+				fmt.Printf("APPHanld:%d,语句:%s\n", v, sql)
 			}
 		}
 

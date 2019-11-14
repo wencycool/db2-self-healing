@@ -85,7 +85,7 @@ func renderStruct(ptr interface{}, str string) error {
 		log.Debug(msg)
 		return errors.New(msg)
 	} else if numFields > len(ptr_fields_nbr) {
-		fields = append(fields[:len(ptr_fields_nbr)-1], strings.Join(fields[len(ptr_fields_nbr)-1:numFields-1], " "))
+		fields = append(fields[:len(ptr_fields_nbr)-1], strings.Join(fields[len(ptr_fields_nbr)-1:numFields], " "))
 		numFields = len(fields)
 	}
 	for i := 0; i < numFields; i++ {

@@ -2,13 +2,25 @@ package main
 
 import (
 	"fmt"
-	"regexp"
+	"reflect"
 )
 
 func main() {
-	str := "<123123><schema>"
-	patt := regexp.MustCompile(`^<(\d+)><(\w+)>$`)
-	fmt.Println(patt.MatchString(str))
-	m := patt.FindAllStringSubmatch(str, 1)
-	fmt.Println(m[0][2])
+	d := new(D)
+	n := reflect.TypeOf(d).Elem().NumField()
+	for i := 0; i < n; i++ {
+		fmt.Println(reflect.TypeOf(d.T).Elem().Field(i).Name)
+	}
+	f, _ := reflect.TypeOf(d).Elem().FieldByName("Name")
+	fmt.Println("打印D中的name:", f.Name)
+	fmt.Println(reflect.TypeOf)
+}
+
+type D struct {
+	T
+}
+
+type T struct {
+	Name string
+	Age  int
 }

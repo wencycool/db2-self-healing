@@ -86,7 +86,7 @@ func GetMonGetActStmtList(str string) []*MonGetActStmt {
 
 //根据当前的mon_get_activity的palnid发生聚合，将所有int类型指标进行聚合，将所有其它类型指标进行更新
 type MonGetActStmtPlanid struct {
-	MonGetActStmt
+	*MonGetActStmt
 	RootHexId     string //该SQL调用者，如果RootHexId等同于HexId则该SQL未被任何调用
 	ActCount      int
 	AppHandleList []int32 //存放相同Planid的application handle
@@ -118,8 +118,9 @@ func GetMonGetActStmtAggByPlanid(acts []*MonGetActStmt) []*MonGetActStmtPlanid {
 		}
 		if _, ok := ByPlanidMap[act.PlanId]; ok {
 			ByPlanidMap[act.PlanId].AppHandleList = append(ByPlanidMap[act.PlanId].AppHandleList, act.AppHandle)
-			obj_type := reflect.TypeOf(ByPlanidMap[act.PlanId]).Elem()
-			obj_value := reflect.ValueOf(ByPlanidMap[act.PlanId]).Elem()
+			ByPlanidMap[act.PlanId].ActCount++
+			obj_type := reflect.TypeOf(ByPlanidMap[act.PlanId].MonGetActStmt).Elem()
+			obj_value := reflect.ValueOf(ByPlanidMap[act.PlanId].MonGetActStmt).Elem()
 			actObj_value := reflect.ValueOf(act).Elem()
 			numFields := obj_value.NumField()
 			for i := 0; i < numFields; i++ {
@@ -145,7 +146,7 @@ func GetMonGetActStmtAggByPlanid(acts []*MonGetActStmt) []*MonGetActStmtPlanid {
 			}
 			AppHandleList := make([]int32, 0)
 			AppHandleList = append(AppHandleList, act.AppHandle)
-			ByPlanidMap[act.PlanId] = &MonGetActStmtPlanid{*act, hexid, 1, AppHandleList}
+			ByPlanidMap[act.PlanId] = &MonGetActStmtPlanid{act, hexid, 1, AppHandleList}
 		}
 	}
 	for k, _ := range ByPlanidMap {
