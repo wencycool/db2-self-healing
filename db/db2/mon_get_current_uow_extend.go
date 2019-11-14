@@ -10,6 +10,7 @@ type MonGetCurUowExtend struct {
 	MataData
 	SnapTime         time.Time `column:"CURRENT TIMESTAMP"`
 	AppHandle        int32     `column:"APPLICATION_HANDLE"`
+	AppId            string    `column:"APPLICATION_ID"`
 	UowId            int32     `column:"UOW_ID"`
 	ClientHostName   string    `column:"CLIENT_HOSTNAME"` //连接进来的客户端主机名
 	UowStartTime     time.Time `column:"UOW_START_TIME"`
@@ -47,7 +48,7 @@ func NewMonGetCurUowExtend() *MonGetCurUowExtend {
 	m := new(MonGetCurUowExtend)
 	m.rep = mon_get_rep
 	//m.tabname = "table(MON_GET_UNIT_OF_WORK(null,-1)) as t where t.UOW_STOP_TIME is null"
-	m.tabname = "(select uow.*,agent.AGENT_STATE,agent.EVENT_TYPE,agent.EVENT_OBJECT,agent.EVENT_STATE,agent.REQUEST_TYPE,agent.ACTIVITY_ID,agent.NESTING_LEVEL,agent.EXECUTABLE_ID,agent.UTILITY_INVOCATION_ID from table(MON_GET_UNIT_OF_WORK(null,-1)) as uow left join table(MON_GET_AGENT('','',cast(NULL as bigint), -1)) agent on uow.APPLICATION_HANDLE=agent.APPLICATION_HANDLE  and uow.UOW_STOP_TIME is null and agent.AGENT_TYPE='COORDINATOR' )"
+	m.tabname = "(select uow.*,agent.AGENT_STATE,agent.EVENT_TYPE,agent.EVENT_OBJECT,agent.EVENT_STATE,agent.REQUEST_TYPE,agent.ACTIVITY_ID,agent.NESTING_LEVEL,agent.EXECUTABLE_ID,agent.UTILITY_INVOCATION_ID from table(MON_GET_UNIT_OF_WORK(null,-1)) as uow left join table(MON_GET_AGENT('','',cast(NULL as bigint), -1)) agent on uow.APPLICATION_HANDLE=agent.APPLICATION_HANDLE  and uow.UOW_STOP_TIME is null and agent.AGENT_TYPE='COORDINATOR' and uow.APPLICATION_ID != application_id())"
 	m.start_flag = m.tabname + mon_get_start_flag
 	m.end_flag = m.tabname + mon_get_end_flag
 	return m

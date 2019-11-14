@@ -45,12 +45,14 @@ type MonGetActStmt struct {
 	HashJoins       int       `column:"TOTAL_HASH_JOINS"`
 	HashLoops       int       `column:"TOTAL_HASH_LOOPS"`
 	HashFlows       int       `column:"HASH_JOIN_OVERFLOWS"`
+	AuthId          string    `column:"SESSION_AUTH_ID"`
+	AppId           string    `column:"APPLICATION_ID"`
 }
 
 func NewMonGetActStmt() *MonGetActStmt {
 	m := new(MonGetActStmt)
 	m.rep = mon_get_rep
-	m.tabname = "TABLE(MON_GET_ACTIVITY(NULL, -1))"
+	m.tabname = "(select act.*,uow.SESSION_AUTH_ID,uow.APPLICATION_ID from TABLE(MON_GET_ACTIVITY(NULL, -1))act left join TABLE(MON_GET_UNIT_OF_WORK(null,-1)) as uow on act.APPLICATION_HANDLE=uow.APPLICATION_HANDLE and act.UOW_ID=uow.UOW_ID and uow.APPLICATION_ID != application_id())"
 	m.start_flag = m.tabname + mon_get_start_flag
 	m.end_flag = m.tabname + mon_get_end_flag
 	return m
