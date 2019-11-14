@@ -7,31 +7,44 @@ import (
 	"time"
 )
 
+//act中只包含目前正在执行的SQL，并不包含处于等待状态的SQL
 type MonGetActStmt struct {
 	MataData
-	SnapTime      time.Time `column:"CURRENT TIMESTAMP"`
-	AppHandle     int32     `column:"APPLICATION_HANDLE"`
-	ActId         int32     `column:"ACTIVITY_ID"`
-	UowId         int32     `column:"UOW_ID"`
-	ActType       string    `column:"ACTIVITY_TYPE"`
-	StmtId        int32     `column:"STMTID"`
-	PlanId        int32     `column:"PLANID"`
-	HexId         string    `column:"EXECUTABLE_ID"`
-	StmtNo        int32     `column:"STMTNO"`
-	CpuTime       int       `column:"TOTAL_CPU_TIME"`
-	ActState      string    `column:"ACTIVITY_STATE"`
-	NestLevel     int32     `column:"NESTING_LEVEL"` //记录嵌套层深，值越大说明被调用的层数越深
-	TotalCpuTime  int       `column:"TOTAL_CPU_TIME"`
-	TotalActTime  int       `column:"TOTAL_ACT_TIME"`      //总的执行时间milliseconds
-	TotalWaitTime int       `column:"TOTAL_ACT_WAIT_TIME"` //总等待时间
-	TotalExecTime int       `column:"STMT_EXEC_TIME"`      //语句的总执行时间
-	RowsRead      int       `column:"ROWS_READ"`
-	RowsDelete    int       `column:"ROWS_DELETED"`
-	RowsInsert    int       `column:"ROWS_INSERTED"`
-	RowsUpdate    int       `column:"ROWS_UPDATED"`
-	HashJoins     int       `column:"TOTAL_HASH_JOINS"`
-	HashLoops     int       `column:"TOTAL_HASH_LOOPS"`
-	HashFlows     int       `column:"HASH_JOIN_OVERFLOWS"`
+	SnapTime        time.Time `column:"CURRENT TIMESTAMP"`
+	StartTime       time.Time `column:"LOCAL_START_TIME"`
+	TimeSpend       int       `column:"INT((CURRENT TIMESTAMP - LOCAL_START_TIME)*1000) AS TIMESPEND"` //已执行时间毫秒
+	AppHandle       int32     `column:"APPLICATION_HANDLE"`
+	ActId           int32     `column:"ACTIVITY_ID"`
+	UowId           int32     `column:"UOW_ID"`
+	ActType         string    `column:"ACTIVITY_TYPE"`
+	StmtId          int32     `column:"STMTID"`
+	PlanId          int32     `column:"PLANID"`
+	HexId           string    `column:"EXECUTABLE_ID"`
+	StmtNo          int32     `column:"STMTNO"`
+	ActState        string    `column:"ACTIVITY_STATE"`
+	NestLevel       int32     `column:"NESTING_LEVEL"`  //记录嵌套层深，值越大说明被调用的层数越深
+	ActTime         int       `column:"TOTAL_ACT_TIME"` //总的执行时间milliseconds
+	CpuTime         int       `column:"TOTAL_CPU_TIME"`
+	ActWTime        int       `column:"TOTAL_ACT_WAIT_TIME"`
+	LockWTime       int       `column:"LOCK_WAIT_TIME"`
+	LatchTime       int       `column:"TOTAL_EXTENDED_LATCH_WAIT_TIME"`
+	RowsRead        int       `column:"ROWS_READ"`
+	RowsDelete      int       `column:"ROWS_DELETED"`
+	RowsInsert      int       `column:"ROWS_INSERTED"`
+	RowsUpdate      int       `column:"ROWS_UPDATED"`
+	PoolDLReads     int       `column:"POOL_DATA_L_READS"`
+	PoolDPReads     int       `column:"POOL_DATA_P_READS"`
+	PoolILReads     int       `column:"POOL_INDEX_L_READS"`
+	PoolIPReads     int       `column:"POOL_INDEX_P_READS"`
+	PoolTmpDLReads  int       `column:"POOL_TEMP_DATA_L_READS"`
+	PoolTmpDPReads  int       `column:"POOL_TEMP_DATA_P_READS"`
+	PoolTmpILReads  int       `column:"POOL_INDEX_L_READS"`
+	PoolTmpIPReads  int       `column:"POOL_INDEX_P_READS"`
+	ActiveHashJoins int       `column:"ACTIVE_HASH_JOINS"`
+	ActiveSorts     int       `column:"ACTIVE_SORTS"`
+	HashJoins       int       `column:"TOTAL_HASH_JOINS"`
+	HashLoops       int       `column:"TOTAL_HASH_LOOPS"`
+	HashFlows       int       `column:"HASH_JOIN_OVERFLOWS"`
 }
 
 func NewMonGetActStmt() *MonGetActStmt {
@@ -72,8 +85,9 @@ func GetMonGetActStmtList(str string) []*MonGetActStmt {
 //根据当前的mon_get_activity的palnid发生聚合，将所有int类型指标进行聚合，将所有其它类型指标进行更新
 type MonGetActStmtPlanid struct {
 	MonGetActStmt
-	RootHexId string //该SQL调用者，如果RootHexId等同于HexId则该SQL未被任何调用
-	ActCount  int
+	RootHexId     string //该SQL调用者，如果RootHexId等同于HexId则该SQL未被任何调用
+	ActCount      int
+	AppHandleList []int32 //存放相同Planid的application handle
 }
 
 type MonGetActStmtPlanidList []*MonGetActStmtPlanid
@@ -101,6 +115,7 @@ func GetMonGetActStmtAggByPlanid(acts []*MonGetActStmt) []*MonGetActStmtPlanid {
 			}
 		}
 		if _, ok := ByPlanidMap[act.PlanId]; ok {
+			ByPlanidMap[act.PlanId].AppHandleList = append(ByPlanidMap[act.PlanId].AppHandleList, act.AppHandle)
 			obj_type := reflect.TypeOf(ByPlanidMap[act.PlanId]).Elem()
 			obj_value := reflect.ValueOf(ByPlanidMap[act.PlanId]).Elem()
 			actObj_value := reflect.ValueOf(act).Elem()
@@ -126,7 +141,9 @@ func GetMonGetActStmtAggByPlanid(acts []*MonGetActStmt) []*MonGetActStmtPlanid {
 			} else {
 				hexid = act.HexId
 			}
-			ByPlanidMap[act.PlanId] = &MonGetActStmtPlanid{*act, hexid, 1}
+			AppHandleList := make([]int32, 0)
+			AppHandleList = append(AppHandleList, act.AppHandle)
+			ByPlanidMap[act.PlanId] = &MonGetActStmtPlanid{*act, hexid, 1, AppHandleList}
 		}
 	}
 	for k, _ := range ByPlanidMap {

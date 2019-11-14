@@ -11,8 +11,9 @@ type MonGetCurUowExtend struct {
 	SnapTime         time.Time `column:"CURRENT TIMESTAMP"`
 	AppHandle        int32     `column:"APPLICATION_HANDLE"`
 	UowId            int32     `column:"UOW_ID"`
+	ClientHostName   string    `column:"CLIENT_HOSTNAME"` //连接进来的客户端主机名
 	UowStartTime     time.Time `column:"UOW_START_TIME"`
-	AuthId           string    `column:"SESSION_AUTH_ID"`
+	AuthId           string    `column:"SESSION_AUTH_ID"` //执行用户ID
 	DDLSqlStmts      int       `column:"DDL_SQL_STMTS"`
 	NumLocksHeld     int       `column:"NUM_LOCKS_HELD"`
 	SinceLastCmtSqls int       `column:"SQL_REQS_SINCE_COMMIT"`
@@ -21,6 +22,15 @@ type MonGetCurUowExtend struct {
 	TotalRunstats    int       `column:"TOTAL_RUNSTATS"`
 	TotalReorgs      int       `column:"TOTAL_REORGS"`
 	TotalLoads       int       `column:"TOTAL_LOADS"`
+	RowsRead         int       `column:"ROWS_READ"`
+	RowsReturned     int       `column:"ROWS_RETURNED"`
+	RowsModified     int       `column:"ROWS_MODIFIED"`
+	RowsDelete       int       `column:"ROWS_DELETED"`
+	RowsInsert       int       `column:"ROWS_INSERTED"`
+	RowsUpdate       int       `column:"ROWS_UPDATED"`
+	SelectStmts      int       `column:"SELECT_SQL_STMTS"`
+	UIDStmts         int       `column:"UID_SQL_STMTS"`
+	DDLStmts         int       `column:"DDL_SQL_STMTS"`
 	AgentState       string    `column:"AGENT_STATE"`           // 从agent中获取
 	EventType        string    `column:"EVENT_TYPE"`            // 从agent中获取
 	EventObj         string    `column:"EVENT_OBJECT"`          // 从agent中获取
@@ -29,7 +39,7 @@ type MonGetCurUowExtend struct {
 	ActId            int32     `column:"ACTIVITY_ID"`           //从agent中获取  //当前正在执行的语句的actid，假如为存储过程，那么该agent是最内层正在执行的SQL的agentid
 	NestLevel        int       `column:"NESTING_LEVEL"`         // 从agent中获取
 	UtilInvId        string    `column:"UTILITY_INVOCATION_ID"` // 从agent中获取
-	HexId            string    `column:"EXECUTABLE_ID"`         // 从agent中获取
+	HexId            string    `column:"EXECUTABLE_ID"`         // 从agent中获取,当前actid对应的HexId ，如果是reorg，runstats等运维作业，则为空
 }
 
 //unit_of_work表和agent表相结合

@@ -5,6 +5,8 @@ import (
 	"github.com/keepeye/logrus-filename"
 	"github.com/sirupsen/logrus"
 	"my/db/db2"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -21,6 +23,11 @@ func main() {
 	act_stmts := db2.GetMonGetActStmtAggByPlanid(acts)
 	for _, act := range act_stmts {
 		fmt.Printf("执行次数:%d，执行语句：%s\n", act.ActCount, act.HexId)
+		applist := make([]string, 0)
+		for _, handle := range act.AppHandleList {
+			applist = append(applist, strconv.Itoa(int(handle)))
+		}
+		fmt.Printf("执行该语句的handle列表：%s\n", strings.Join(applist, ","))
 		fmt.Println("对每一个SQL进行解析，检查执行计划")
 		if act.HexId == "" {
 			continue
