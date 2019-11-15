@@ -56,7 +56,7 @@ type MonGetExplainObj struct {
 	TabReads      int       //ROWS_READ 表被扫描的次数
 	TabScans      int       //表扫描次数,只有在ObjType='TA' 即table的时候才会获取
 	SRowsModified int       //自动上次统计信息依赖，表的修改记录数,只有在ObjType='TA' 即table的时候才会获取
-	DataLPages    int       //表的逻辑page页数，包括表和索引的page页面,只有在ObjType='TA' 即table的时候才会获取
+	RDataLPages   int       //表的真实的逻辑page页数从mon_get_table中获取，包括表和索引的page页面,只有在ObjType='TA' 即table的时候才会获取
 
 }
 
@@ -163,7 +163,7 @@ func (m *MonGetExplain) GetObj() ([]*MonGetExplainObj, error) {
 					d.TabReads = reads
 				}
 				if pages, err := strconv.Atoi(fields[2]); err == nil {
-					d.DataLPages = pages
+					d.RDataLPages = pages
 				}
 				if modifieds, err := strconv.Atoi(fields[3]); err == nil {
 					d.SRowsModified = modifieds

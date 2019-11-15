@@ -1,26 +1,24 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
-	"reflect"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 )
 
 func main() {
-	d := new(D)
-	n := reflect.TypeOf(d).Elem().NumField()
-	for i := 0; i < n; i++ {
-		fmt.Println(reflect.TypeOf(d.T).Elem().Field(i).Name)
-	}
-	f, _ := reflect.TypeOf(d).Elem().FieldByName("Name")
-	fmt.Println("打印D中的name:", f.Name)
-	fmt.Println(reflect.TypeOf)
-}
-
-type D struct {
-	T
-}
-
-type T struct {
-	Name string
-	Age  int
+	//统计代码行数
+	cnt := 0
+	filepath.Walk("/Users/wency/go/src/awesomeProject/db-self-healing/db", func(path string, info os.FileInfo, err error) error {
+		if err == nil && !info.IsDir() {
+			f, _ := os.Open(path)
+			bs, _ := ioutil.ReadAll(f)
+			n := len(bytes.Split(bs, []byte("\n")))
+			cnt += n
+		}
+		return nil
+	})
+	fmt.Println(cnt)
 }

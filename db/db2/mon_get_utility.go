@@ -61,3 +61,12 @@ func GetMonGetUtilList(str string) []*MonGetUtil {
 	}
 	return ms
 }
+
+func LookupMonGetUtilByUtilInvId(utils []*MonGetUtil, UtilInvId string) (*MonGetUtil, bool) {
+	for _, u := range utils {
+		if u.UtilInvId == UtilInvId {
+			return u, true
+		}
+	}
+	return nil, false
+}

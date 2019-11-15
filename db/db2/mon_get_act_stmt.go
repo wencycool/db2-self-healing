@@ -87,8 +87,9 @@ func GetMonGetActStmtList(str string) []*MonGetActStmt {
 //根据当前的mon_get_activity的palnid发生聚合，将所有int类型指标进行聚合，将所有其它类型指标进行更新
 type MonGetActStmtPlanid struct {
 	*MonGetActStmt
-	RootHexId     string //该SQL调用者，如果RootHexId等同于HexId则该SQL未被任何调用
-	ActCount      int
+	RootHexId     string  //该SQL调用者，如果RootHexId等同于HexId则该SQL未被任何调用
+	ActCount      int     //一共发生的聚合次数
+	ActDataCount  int     //聚合后mon_get_activity表中有指标记录的集合次数，但是TimeSpend会聚合所有的
 	AppHandleList []int32 //存放相同Planid的application handle
 }
 
@@ -116,12 +117,16 @@ func GetMonGetActStmtAggByPlanid(acts []*MonGetActStmt) []*MonGetActStmtPlanid {
 				HexIdMap[act.AppHandle] = act.HexId
 			}
 		}
+		ByPlanidMap[act.PlanId].AppHandleList = append(ByPlanidMap[act.PlanId].AppHandleList, act.AppHandle)
+		ByPlanidMap[act.PlanId].ActCount++
+		obj_type := reflect.TypeOf(ByPlanidMap[act.PlanId].MonGetActStmt).Elem()
+		obj_value := reflect.ValueOf(ByPlanidMap[act.PlanId].MonGetActStmt).Elem()
+		actObj_value := reflect.ValueOf(act).Elem()
+		//如果ActTime大于0，那么指标信息为有效信息
 		if _, ok := ByPlanidMap[act.PlanId]; ok {
-			ByPlanidMap[act.PlanId].AppHandleList = append(ByPlanidMap[act.PlanId].AppHandleList, act.AppHandle)
-			ByPlanidMap[act.PlanId].ActCount++
-			obj_type := reflect.TypeOf(ByPlanidMap[act.PlanId].MonGetActStmt).Elem()
-			obj_value := reflect.ValueOf(ByPlanidMap[act.PlanId].MonGetActStmt).Elem()
-			actObj_value := reflect.ValueOf(act).Elem()
+			if actTimeVal := actObj_value.FieldByName("ActTime"); actTimeVal.CanAddr() && actTimeVal.Int() > 0 {
+				ByPlanidMap[act.PlanId].ActDataCount++
+			}
 			numFields := obj_value.NumField()
 			for i := 0; i < numFields; i++ {
 				obj_tp := obj_type.Field(i).Type.String()
@@ -139,14 +144,19 @@ func GetMonGetActStmtAggByPlanid(acts []*MonGetActStmt) []*MonGetActStmtPlanid {
 			}
 		} else {
 			var hexid string
+			var actCnt int
 			if v, ok := HexIdMap[act.AppHandle]; ok {
 				hexid = v
 			} else {
 				hexid = act.HexId
 			}
+			//如果ActTime大于0，那么指标信息为有效信息
+			if actTimeVal := actObj_value.FieldByName("ActTime"); actTimeVal.CanAddr() && actTimeVal.Int() > 0 {
+				actCnt++
+			}
 			AppHandleList := make([]int32, 0)
 			AppHandleList = append(AppHandleList, act.AppHandle)
-			ByPlanidMap[act.PlanId] = &MonGetActStmtPlanid{act, hexid, 1, AppHandleList}
+			ByPlanidMap[act.PlanId] = &MonGetActStmtPlanid{act, hexid, 1, actCnt, AppHandleList}
 		}
 	}
 	for k, _ := range ByPlanidMap {

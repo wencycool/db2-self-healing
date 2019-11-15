@@ -171,3 +171,22 @@ func removeRepByMap(slc []interface{}) []interface{} {
 	}
 	return result
 }
+
+//格式化以字节单位的转换
+func ByteSizeFormat(m int) string {
+	unitList := []string{"B", "KB", "MB", "GB", "TB", "PB"}
+	type S struct {
+		m    int    // 记录大小
+		unit string //记录单位
+	}
+	s := &S{m, "B"}
+	for i := 0; i < len(unitList); i++ {
+		if s.unit == unitList[i] && i+1 < len(unitList) && s.m > 1024 {
+			s.m = s.m / 1024
+			s.unit = unitList[i+1]
+			continue
+		}
+		break
+	}
+	return strconv.Itoa(s.m) + s.unit
+}

@@ -1,7 +1,7 @@
 package db2
 
 import (
-	"strings"
+	"sort"
 	"time"
 )
 
@@ -58,24 +58,40 @@ func (m *MonGetCurUowExtend) GetSqlText() string {
 	return genSql(m)
 }
 
-//通过从数据库返回的结果，生成结果集
-func GetMonGetCurUowExtendList(str string) []*MonGetCurUowExtend {
-	m := NewMonGetCurUowExtend()
-	ms := make([]*MonGetCurUowExtend, 0)
-	start := strings.Index(str, m.start_flag) + len(m.start_flag)
-	stop := strings.Index(str, m.end_flag)
-	for _, line := range strings.Split(str[start:stop], "\n") {
-		if strings.TrimSpace(line) == "" {
-			continue
+//大事务相关函数uows当前所有的活动事务，maxsize超过改值被称为大事务，按照降序的方式输出
+func BigTrxUow(uows []*MonGetCurUowExtend, maxsize int) []*MonGetCurUowExtend {
+	bigUow := make([]*MonGetCurUowExtend, 0)
+	for _, uow := range uows {
+		if uow.UowLogSpaceUsed > maxsize {
+			bigUow = append(bigUow, uow)
 		}
-		d := NewMonGetCurUowExtend()
-		d.tabname = ""
-		d.start_flag = ""
-		d.end_flag = ""
-		if err := renderStruct(d, line); err != nil {
-			continue
-		}
-		ms = append(ms, d)
 	}
-	return ms
+	//对bigUow按照日志使用量进行降序排序
+	if len(bigUow) <= 1 {
+		return bigUow
+	}
+	sort.Sort(BigTrxUowList(bigUow))
+	return bigUow
+}
+
+type BigTrxUowList []*MonGetCurUowExtend
+
+func (b BigTrxUowList) Len() int {
+	return len(b)
+}
+func (b BigTrxUowList) Less(i, j int) bool {
+	return b[i].UowLogSpaceUsed > b[j].UowLogSpaceUsed
+}
+func (b BigTrxUowList) Swap(i, j int) {
+	b[i], b[j] = b[j], b[i]
+}
+
+//查找MonGetCurUowExtend是否存在,如果不存在返回nil，false,因事务数一般不会很多，因此采用遍历的方式直接查找
+func LookupMonGetCurUowExtendByAppHandle(uows []*MonGetCurUowExtend, appHandle int32) (*MonGetCurUowExtend, bool) {
+	for _, uow := range uows {
+		if uow.AppHandle == appHandle {
+			return uow, true
+		}
+	}
+	return nil, false
 }
