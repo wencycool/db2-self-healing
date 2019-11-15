@@ -127,7 +127,7 @@ func (m *MonGetExplain) GetObj() ([]*MonGetExplainObj, error) {
 //获取执行计划的operator信息
 func (m *MonGetExplain) getOperator() ([]*MonGetExplainOperator, error) {
 	col_str := reflectMonGet(new(MonGetExplainOperator))
-	argSql := fmt.Sprintf("select %s from EXPLAIN_OBJECT where EXPLAIN_REQUESTER='%s' and EXPLAIN_TIME='%s' with ur",
+	argSql := fmt.Sprintf("select %s from EXPLAIN_OPERATOR where EXPLAIN_REQUESTER='%s' and EXPLAIN_TIME='%s' with ur",
 		col_str, m.ExplnReq, m.ExplnTime)
 	cmd := exec.Command("db2", "-x", argSql)
 	//找到相关字段以后进行字段解析
