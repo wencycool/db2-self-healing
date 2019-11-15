@@ -117,13 +117,13 @@ func GetMonGetActStmtAggByPlanid(acts []*MonGetActStmt) []*MonGetActStmtPlanid {
 				HexIdMap[act.AppHandle] = act.HexId
 			}
 		}
-		ByPlanidMap[act.PlanId].AppHandleList = append(ByPlanidMap[act.PlanId].AppHandleList, act.AppHandle)
-		ByPlanidMap[act.PlanId].ActCount++
-		obj_type := reflect.TypeOf(ByPlanidMap[act.PlanId].MonGetActStmt).Elem()
-		obj_value := reflect.ValueOf(ByPlanidMap[act.PlanId].MonGetActStmt).Elem()
 		actObj_value := reflect.ValueOf(act).Elem()
 		//如果ActTime大于0，那么指标信息为有效信息
 		if _, ok := ByPlanidMap[act.PlanId]; ok {
+			ByPlanidMap[act.PlanId].AppHandleList = append(ByPlanidMap[act.PlanId].AppHandleList, act.AppHandle)
+			ByPlanidMap[act.PlanId].ActCount++
+			obj_type := reflect.TypeOf(ByPlanidMap[act.PlanId].MonGetActStmt).Elem()
+			obj_value := reflect.ValueOf(ByPlanidMap[act.PlanId].MonGetActStmt).Elem()
 			if actTimeVal := actObj_value.FieldByName("ActTime"); actTimeVal.CanAddr() && actTimeVal.Int() > 0 {
 				ByPlanidMap[act.PlanId].ActDataCount++
 			}

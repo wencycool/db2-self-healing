@@ -2,6 +2,7 @@ package db2
 
 import (
 	"sort"
+	"strings"
 	"time"
 )
 
@@ -56,6 +57,28 @@ func NewMonGetCurUowExtend() *MonGetCurUowExtend {
 
 func (m *MonGetCurUowExtend) GetSqlText() string {
 	return genSql(m)
+}
+
+//通过从数据库返回的结果，生成结果集
+func GetMonGetCurUowExtendList(str string) []*MonGetCurUowExtend {
+	m := NewMonGetCurUowExtend()
+	ms := make([]*MonGetCurUowExtend, 0)
+	start := strings.Index(str, m.start_flag) + len(m.start_flag)
+	stop := strings.Index(str, m.end_flag)
+	for _, line := range strings.Split(str[start:stop], "\n") {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		d := NewMonGetCurUowExtend()
+		d.tabname = ""
+		d.start_flag = ""
+		d.end_flag = ""
+		if err := renderStruct(d, line); err != nil {
+			continue
+		}
+		ms = append(ms, d)
+	}
+	return ms
 }
 
 //大事务相关函数uows当前所有的活动事务，maxsize超过改值被称为大事务，按照降序的方式输出

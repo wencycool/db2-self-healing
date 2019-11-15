@@ -53,7 +53,7 @@ func main() {
 			uow.AppHandle, db2.ByteSizeFormat(uow.UowLogSpaceUsed), uow.UowStartTime.String(),
 			findSQL(uow.AppHandle))
 	}
-	fmt.Printf("当前是否存在锁等待?%s个\n", len(locks))
+	fmt.Printf("当前是否存在锁等待?%d个\n", len(locks))
 	lockHeaders := db2.GetLockHeaderMap(locks)
 	if len(lockHeaders) > 0 {
 		fmt.Printf("打印锁等待的Header信息\n")
@@ -93,13 +93,13 @@ func main() {
 	}
 	//查看当前活动状态
 	act_stmts := db2.GetMonGetActStmtAggByPlanid(acts)
-	fmt.Printf("当前处于活动状态（不含任何等待状态语句)的语句个数为:%d\n", len(act_stmts))
+	fmt.Printf("当前处于活动状态（不含任何等待状态语句)的语句个数为:%d\n", len(acts))
 	for _, act := range act_stmts {
 		applist := make([]string, 0)
 		for _, handle := range act.AppHandleList {
 			applist = append(applist, strconv.Itoa(int(handle)))
 		}
-		fmt.Printf("执行次数:%-10d,总执行时间占比:%d,\n    相似SQL涉及APPHandle列表为:%s,"+
+		fmt.Printf("执行次数:%-10d,\n    相似SQL涉及APPHandle列表为:%s,"+
 			"\n    执行语句：%s\n", act.ActCount, db2.NewMonGetPkgCacheStmt(act.HexId).StmtText,
 			strings.Join(applist, ","))
 		fmt.Println("对每一个SQL进行解析，检查执行计划")
@@ -114,8 +114,8 @@ func main() {
 				fmt.Println(err)
 			} else {
 				for _, obj := range objs {
-					fmt.Printf("    对象信息:,对象类型%-10s,对象名:%-20s,统计信息记录数:%-10d,最近变更记录数:%-10d,"+
-						"索引FuKCard值:%-10d\n,是否小表突变?(%t)",
+					fmt.Printf("    对象信息:,对象类型:%-10s,对象名:%-20s,统计信息记录数:%-10d,最近变更记录数:%-10d,"+
+						"索引FuKCard值:%-10d,是否小表突变?(%t)\n",
 						obj.ObjType, obj.ObjName, obj.RowCount, obj.SRowsModified, obj.FUKCard, obj.RowCount < obj.SRowsModified)
 				}
 			}
