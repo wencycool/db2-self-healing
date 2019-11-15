@@ -166,7 +166,7 @@ func (m *MonGetExplain) hasOperaType(opType string) bool {
 }
 
 //查看执行计划中是否存在HashJoin信息，当并发执行较多且有hashJoin的情况下并不是良好现象
-//在判断长时间执行SQL的时候如果发生大量的rows_read 是两个表数据量的5倍以上，往往是由于没有走hashjoin导致，
+//在判断长时间执行SQL的时候如果发生大量的rows_read 是两个表数据量的N倍以上，往往是由于没有走hashjoin导致，
 // 因此也可以通过此粗略短判断执行计划是否存在问题
 func (m *MonGetExplain) HasHashJoin() bool {
 	return m.hasOperaType("HSJOIN")
@@ -177,6 +177,9 @@ func (m *MonGetExplain) HasHashJoin() bool {
 func (m *MonGetExplain) HasIxand() bool {
 	return m.hasOperaType("IXAND")
 }
+
+//当不存在任何Join即单表操作且有where条件的时候要有索引
+//当存在join，那么NLJOIN的右侧必须包含索引操作
 
 //执行计划
 /*Object Type:
