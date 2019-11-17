@@ -1,7 +1,7 @@
 package db2
 
 //进行explain经验性分析
-//对于搞并发短事务查询不应该存在hashJoin操作，即判断执行计划树中是否存在hashJoin操作
+//对于高并发短事务查询不应该存在hashJoin操作，即判断执行计划树中是否存在hashJoin操作
 func (n *Node) HasHSJoin() bool {
 	stack := new(Stack)
 	stack.push(n)
@@ -17,7 +17,7 @@ func (n *Node) HasHSJoin() bool {
 	return false
 }
 
-//对于搞并发操作，右侧子operator不应该出现IXAND操作
+//对于高并发操作，右侧子operator不应该出现IXAND操作
 func (n *Node) HasRightOperatorIXAnd() bool {
 	stack := new(Stack)
 	stack.push(n)
@@ -33,4 +33,18 @@ func (n *Node) HasRightOperatorIXAnd() bool {
 	return false
 }
 
-//对于
+//对于NLJoin，右侧子operator不应该是tabscan操作
+func (n *Node) HasRightOperatorTabScan() bool {
+	stack := new(Stack)
+	stack.push(n)
+	for !stack.isEmpty() {
+		nd := stack.pop()
+		if nd.Stream.SrcOpType == "NLJOIN" && len(nd.NextList) == 2 && nd.NextList[1].Stream.SrcOpType == "TBSCAN" {
+			return true
+		}
+		for _, v := range nd.NextList {
+			stack.push(v)
+		}
+	}
+	return false
+}
