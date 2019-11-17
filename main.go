@@ -45,7 +45,7 @@ func main() {
 
 	}
 	//日志空间使用率超过400MB即称作为大事务
-	BigTrxLogLimit := 400 << 20 //400MB
+	BigTrxLogLimit := 100 << 20 //400MB
 	bigTrxUow := db2.BigTrxUow(uow_extends, BigTrxLogLimit)
 	fmt.Printf("当前是否存在大事务?(%t) %d个\n", len(bigTrxUow) != 0, len(bigTrxUow))
 	for _, uow := range bigTrxUow {
@@ -92,16 +92,19 @@ func main() {
 			lock.LockMode, findSQL(lock.ReqAppHandle))
 	}
 	//查看当前活动状态
-	act_stmts := db2.GetMonGetActStmtAggByPlanid(acts)
-	fmt.Printf("当前处于活动状态（不含任何等待状态语句)的语句个数为:%d\n", len(acts))
-	for _, act := range act_stmts {
-		applist := make([]string, 0)
-		for _, handle := range act.AppHandleList {
-			applist = append(applist, strconv.Itoa(int(handle)))
+	curAppHandle := db2.CurrentAppHandle()
+	acts_except_mon_get := make([]*db2.MonGetActStmt, 0)
+	for _, act := range acts {
+		if act.AppHandle == curAppHandle {
+			continue
 		}
-		fmt.Printf("执行次数:%-10d,\n    相似SQL涉及APPHandle列表为:%s,"+
-			"\n    执行语句：%s\n", act.ActCount, db2.NewMonGetPkgCacheStmt(act.HexId).StmtText,
-			strings.Join(applist, ","))
+		acts_except_mon_get = append(acts_except_mon_get, act)
+	}
+	act_stmts := db2.GetMonGetActStmtAggByPlanid(acts_except_mon_get)
+	fmt.Printf("当前处于活动状态（不含任何等待状态语句)的语句个数为:%d\n", len(acts))
+	for i, act := range act_stmts {
+		fmt.Printf("  [第%d条语句] 执行次数:%-10d,\n    相似SQL涉及APPHandle列表为:%s,"+
+			"\n    执行语句：%s\n", i+1, act.ActCount, intListToStr(act.AppHandleList, ","), db2.NewMonGetPkgCacheStmt(act.HexId).StmtText)
 		fmt.Println("对每一个SQL进行解析，检查执行计划")
 		if act.HexId == "" {
 			continue
@@ -125,11 +128,13 @@ func main() {
 			if err != nil {
 				fmt.Printf("打印Node报错：%s\n", err)
 			} else {
-				fmt.Println(len(streams))
 				streamNode := db2.NewNode(streams)
-				streamNode.PrintData()
-				fmt.Println("Check Hash Join")
-				fmt.Printf("检查是否包含HashJoin：%t\n", streamNode.HasHSJoin())
+				//streamNode.PrintData()
+				t1 := time.Now()
+				fmt.Printf("检查是否包含HashJoin			%t    	--高并发交易SQL不应出现\n", streamNode.HasHSJoin())
+				fmt.Printf("检查NLJoin右子树是否包含IXAND:		%t    	--高并发交易SQL不应出现\n", streamNode.HasRightOperatorIXAnd())
+				fmt.Printf("检查NLJoin右子树是否包含TabScan：	%t		--任何SQL不应出现\n", streamNode.HasRightOperatorTabScan())
+				fmt.Printf("打印一共花费时长:%s\n", time.Now().Sub(t1).String())
 			}
 
 		}
@@ -138,4 +143,12 @@ func main() {
 	}
 	//测试执行计划
 
+}
+
+func intListToStr(l []int32, rep string) string {
+	r := make([]string, 0)
+	for _, v := range l {
+		r = append(r, strconv.Itoa(int(v)))
+	}
+	return strings.Join(r, rep)
 }
