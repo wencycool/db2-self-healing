@@ -98,13 +98,20 @@ func renderStruct(ptr interface{}, str string) error {
 				if fields[i] == "-" {
 					v.SetInt(-1)
 				} else {
-					val, err := strconv.Atoi(fields[i])
-					if err != nil {
-						return err
+					//判断文本是否整数
+					fi := fields[i]
+					var newNum float64
+					if val, err := strconv.Atoi(fi); err == nil {
+						v.SetInt(int64(val))
+					} else if val, err := strconv.ParseFloat(fi, 64); err == nil {
+						v.SetInt(int64(val))
+					} else if _, err := fmt.Sscanf(fi, "%E", newNum); err == nil {
+						v.SetInt(int64(newNum))
+					} else {
+						return errors.New("无法将文本解析为数据类型")
 					}
-					v.SetInt(int64(val))
-				}
 
+				}
 			case "string":
 				if fields[i] == "-" {
 					v.SetString("")

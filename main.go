@@ -110,6 +110,7 @@ func main() {
 		if err != nil {
 			fmt.Println(err)
 		} else {
+			//获取执行计划上的对象信息
 			if objs, err := expln.GetObj(); err != nil {
 				fmt.Println(err)
 			} else {
@@ -119,9 +120,22 @@ func main() {
 						obj.ObjType, obj.ObjName, obj.RowCount, obj.SRowsModified, obj.FUKCard, obj.RowCount < obj.SRowsModified)
 				}
 			}
+			//获取stream信息
+			streams, err := expln.GetStream()
+			if err != nil {
+				fmt.Printf("打印Node报错：%s\n", err)
+			} else {
+				fmt.Println(len(streams))
+				streamNode := db2.NewNode(streams)
+				streamNode.PrintData()
+				fmt.Println("Check Hash Join")
+				fmt.Printf("检查是否包含HashJoin：%t\n", streamNode.HasHSJoin())
+			}
+
 		}
 		fmt.Printf("    打印Advis信息,执行者:%-30s,执行语句:%s\n", act.AuthId, db2.NewMonGetPkgCacheStmt(act.HexId).StmtText)
 
 	}
+	//测试执行计划
 
 }
