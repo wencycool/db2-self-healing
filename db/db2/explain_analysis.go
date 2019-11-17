@@ -3,15 +3,62 @@ package db2
 //进行explain经验性分析
 //对于高并发短事务查询不应该存在hashJoin操作，即判断执行计划树中是否存在hashJoin操作
 func (n *Node) HasHSJoin() bool {
+	return n.hasOperatorType("HSJOIN")
+}
+func (n *Node) HasNLJoin() bool {
+	return n.hasOperatorType("NLJOIN")
+}
+func (n *Node) HasIXAnd() bool {
+	return n.hasOperatorType("IXAND")
+}
+
+func (n *Node) HasIXScan() bool {
+	return n.hasOperatorType("IXSCAN")
+}
+func (n *Node) HasRIDScan() bool {
+	return n.hasOperatorType("RIDSCN")
+}
+
+//遍历树查看是否含有指定操作
+func (n *Node) hasOperatorType(opType string) bool {
 	stack := new(Stack)
 	stack.push(n)
 	for !stack.isEmpty() {
 		nd := stack.pop()
-		if nd.Stream.SrcOpType == "HSJOIN" {
+		if nd.Stream.SrcOpType == opType {
 			return true
 		}
 		for _, v := range nd.NextList {
 			stack.push(v)
+		}
+	}
+	return false
+}
+
+//遍历左子树查看是否包含指定操作,当某节点只有一个孩子的时候要继续遍历这个孩子
+func (n *Node) hasLeftOperatorType(opType string) bool {
+	if len(n.NextList) > 0 && n.NextList[0].Stream.SrcOpType == opType {
+		return true //当存在某节点的左子树的值为指定值时返回true
+	}
+	for _, v := range n.NextList {
+		if v.hasLeftOperatorType(opType) {
+			return true
+		}
+	}
+	return false
+}
+
+//遍历右子树查看是否包含指定操作,当某节点只有一个孩子的时候要继续遍历这个孩子
+func (n *Node) hasRightOperatorType(opType string) bool {
+	if len(n.NextList) > 0 {
+		for _, v := range n.NextList[1:] {
+			if v.Stream.SrcOpType == opType {
+				return true
+			} else {
+				if v.hasRightOperatorType(opType) {
+					return true
+				}
+			}
 		}
 	}
 	return false
@@ -77,7 +124,7 @@ func (n *Node) HasRightOperatorIXAnd() bool {
 	stack.push(n)
 	for !stack.isEmpty() {
 		nd := stack.pop()
-		if nd.Stream.SrcOpType == "NLJOIN" && len(nd.NextList) == 2 && nd.NextList[1].Stream.SrcOpType == "FETCH" && len(nd.NextList[1].NextList) == 2 && nd.NextList[1].NextList[0].Stream.SrcOpType == "RIDSCN" {
+		if nd.Stream.SrcOpType == "NLJOIN" && len(nd.NextList) == 2 && nd.NextList[1].Stream.SrcOpType == "FETCH" && len(nd.NextList[1].NextList) == 2 && nd.NextList[1].NextList[0].HasIXAnd() {
 			return true
 		}
 		for _, v := range nd.NextList {
