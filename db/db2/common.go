@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	logrus "github.com/sirupsen/logrus"
+	"os/exec"
 	"os/user"
 	"reflect"
 	"strconv"
@@ -31,6 +32,14 @@ var mon_get_end_flag = "_end"
 var mon_get_rep = ";"
 var timestamp_short_form = "2006-01-02-15.04.05.000000"
 
+//当前进程连接DB数据库，当前主进程维持一个DB连接
+func ConnectDB(dbname string) error {
+	bs, err := exec.Command("db2", "connect to "+dbname).CombinedOutput()
+	if err != nil {
+		return errors.New(string(bs))
+	}
+	return nil
+}
 func GetCurInstanceName() string {
 	u, _ := user.Current()
 	return u.Name

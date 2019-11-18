@@ -2,7 +2,6 @@ package db2
 
 import (
 	"bytes"
-	"fmt"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -12,7 +11,7 @@ import (
 
 //获取所有性能相关数据
 //设置5秒的超时时间
-func CollectPerfData(db string, duration time.Duration) ([]*MonGetActStmt, []*MonGetTrxLog, []*MonGetHadr, []*MonGetCurUow, []*MonGetLockWait, []*MonGetUtil, []*MonGetCurUowExtend, error) {
+func CollectPerfData(duration time.Duration) ([]*MonGetActStmt, []*MonGetTrxLog, []*MonGetHadr, []*MonGetCurUow, []*MonGetLockWait, []*MonGetUtil, []*MonGetCurUowExtend, error) {
 	mon_get_act_stmt := NewMonGetActStmt()
 	mon_get_trx_log := NewMonGetTrxLog()
 	mon_get_hdr := NewMonGetHadr()
@@ -31,7 +30,6 @@ func CollectPerfData(db string, duration time.Duration) ([]*MonGetActStmt, []*Mo
 	cmd.Stdin = &in
 	sql_text := strings.Join(sql_text_list, "")
 	log.Debug(sql_text)
-	in.WriteString(fmt.Sprintf("connect to %s ;\n", db))
 	in.WriteString(sql_text)
 	//设置超时
 	time.AfterFunc(duration, func() {

@@ -1,16 +1,10 @@
 package main
 
-import (
-	"my/vm"
-	"time"
-)
+import "fmt"
 
 func main() {
-	vm.MemLimit(1024)
-	a := make([]string, 0)
-	for i := 0; i < 100000; i++ {
-		a = append(a, "asdfasdfasfdasdfasdfasodfjasodfjasof")
-		time.Sleep(time.Millisecond * 100)
-	}
+	fmt.Printf("\033[5;40;32m%s\033[0m", "test")
+	fmt.Printf("\n %c[5;40;32m%s%c[0m\n\n", 0x1B, "testPrintColor", 0x1B)
+	fmt.Println(0x1B)
 
 }
