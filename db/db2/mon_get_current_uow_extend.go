@@ -1,10 +1,13 @@
 package db2
 
 import (
+	"fmt"
 	"sort"
 	"strings"
 	"time"
 )
+
+const MAX_FORCE_LOG_USED_LIMIT int = 2 << 30 //超过2GB的日志使用量则杀掉要谨慎
 
 //获取当前正在执行的uow事务，只包含未做提交的所有事务并且包含相关agent信息,对于reorg runstats等作业，agent无UOWID 但可以根据Apphandle关联出相关语句
 type MonGetCurUowExtend struct {
@@ -57,6 +60,23 @@ func NewMonGetCurUowExtend() *MonGetCurUowExtend {
 
 func (m *MonGetCurUowExtend) GetSqlText() string {
 	return genSql(m)
+}
+
+/*
+一个应用是否可以杀掉，设计的处理操作非常广泛，但是最为基本的两点要进行判断：
+1. 该app持有多少日志量；2. 该事务是否包含了DDL语句？ 防止包含不记录日志操作的DDL语句导致表损坏。
+其它层面还包括app是否处于可杀状态，如rollforward；是否处于rebuild index状态，杀掉还是会重做影响时间，比如reorg的最后rebuild index阶段。
+以及其它很多条件，但是最为自动运维这些条件并不是最重要的，先满足上面两点即可
+*/
+func (m *MonGetCurUowExtend) CanForce() (canforce bool, msg string) {
+	switch {
+	case m.DDLStmts > 0:
+		return false, fmt.Sprintf("包含DDL语句，怀疑存在alter table not logged等语句,不可杀掉,当前日志量:%s\n", ByteSizeFormat(m.UowLogSpaceUsed))
+	case m.UowLogSpaceUsed > MAX_FORCE_LOG_USED_LIMIT:
+		return false, fmt.Sprintf("事务太大，回滚时间可能会太长，需要人工分析,当前日志量:%s\n", ByteSizeFormat(m.UowLogSpaceUsed))
+	default:
+		return true, fmt.Sprintf("可以杀掉,当前日志量:%s\n", ByteSizeFormat(m.UowLogSpaceUsed))
+	}
 }
 
 //通过从数据库返回的结果，生成结果集

@@ -5,12 +5,19 @@ import (
 	"github.com/keepeye/logrus-filename"
 	"github.com/sirupsen/logrus"
 	"my/db/db2"
+	"my/vm"
 	"strconv"
 	"strings"
 	"time"
 )
 
+func init() {
+	//控制内存使用量100MB
+	vm.MemLimit(100 << 20)
+}
 func main() {
+	var dbname string
+	dbname = "sample"
 	var log *logrus.Logger
 	log = logrus.New()
 	filenameHook := filename.NewHook()
@@ -19,7 +26,7 @@ func main() {
 	log.SetLevel(logrus.PanicLevel)
 	log.SetFormatter(&logrus.TextFormatter{})
 	db2.LogRegister(log)
-	acts, Trxlogs, _, _, locks, utils, uow_extends, _ := db2.CollectPerfData("sample", time.Duration(time.Second*10))
+	acts, Trxlogs, _, _, locks, utils, uow_extends, _ := db2.CollectPerfData(dbname, time.Duration(time.Second*10))
 	//整体情况分析：1、 是否存在大事务；2、找出最古老事务；3、当前活动连接情况；4、当前锁等待情况
 	//给定一个APP查看当前SQL语句或者最近一次SQL语句
 	findSQL := func(appHandle int32) string {
@@ -86,10 +93,14 @@ func main() {
 	if len(locks) > 0 {
 		fmt.Printf("打印处于锁等待状态的SQL语句信息,(当前锁等等待语句数为:%d)\n", len(locks))
 	}
+	if len(locks) > 20 {
+		fmt.Printf("锁等待个数太多，只显示10条")
+		locks = locks[:10]
+	}
 	for _, lock := range locks {
-		fmt.Printf("当前AppHandle:%d,等待时长:%s,LockMode:%s,\n    处于等待状态的语句:%s\n",
-			lock.ReqAgentTid, lock.SnapTime.Sub(lock.LockWaitStartTime).String(),
-			lock.LockMode, findSQL(lock.ReqAppHandle))
+		fmt.Printf("当前AppHandle:%d,等待时长:%s,LOCK_OBJECT_TYPE:%s,LOCK_MODE:%s,LOCK_MODE_REQUESTED:%s,LOCK_STATUS:%s\n    处于等待状态的语句:%s\n",
+			lock.ReqAppHandle, lock.SnapTime.Sub(lock.LockWaitStartTime).String(),
+			lock.LockObjType, lock.LockMode, lock.LockModeReq, lock.LockStatus, findSQL(lock.ReqAppHandle))
 	}
 	//查看当前活动状态
 	curAppHandle := db2.CurrentAppHandle()
@@ -103,7 +114,7 @@ func main() {
 	act_stmts := db2.GetMonGetActStmtAggByPlanid(acts_except_mon_get)
 	fmt.Printf("当前处于活动状态（不含任何等待状态语句)的语句个数为:%d\n", len(acts))
 	for i, act := range act_stmts {
-		fmt.Printf("  [第%d条语句] 执行次数:%-10d,\n    相似SQL涉及APPHandle列表为:%s,"+
+		fmt.Printf("  [第%d条语句] 执行次数:%-10d,\n    相似SQL涉及APPHandle列表为:%s"+
 			"\n    执行语句：%s\n", i+1, act.ActCount, intListToStr(act.AppHandleList, ","), db2.NewMonGetPkgCacheStmt(act.HexId).StmtText)
 		fmt.Println("对每一个SQL进行解析，检查执行计划")
 		if act.HexId == "" {
@@ -138,7 +149,7 @@ func main() {
 			}
 
 		}
-		fmt.Printf("    打印Advis信息,执行者:%-30s,执行语句:%s\n", act.AuthId, db2.NewMonGetPkgCacheStmt(act.HexId).StmtText)
+		fmt.Printf("    打印Advis信息,执行语句:db2advis -d %s -s \"%s\" -q %s -n %s \n", dbname, db2.NewMonGetPkgCacheStmt(act.HexId).StmtText, act.AuthId, act.AuthId)
 
 	}
 	//测试执行计划

@@ -1,25 +1,16 @@
 package main
 
-import "fmt"
+import (
+	"my/vm"
+	"time"
+)
 
 func main() {
-	m := make([]*S, 0)
-	m = append(m, &S{1})
-	m = append(m, &S{2})
-	m = append(m, &S{3})
-	S := SList{}
-	S = m
-	S.print()
-}
-
-type S struct {
-	Id int
-}
-type SList []*S
-
-func (s SList) print() {
-	for _, v := range s {
-		fmt.Println(v.Id)
+	vm.MemLimit(1024)
+	a := make([]string, 0)
+	for i := 0; i < 100000; i++ {
+		a = append(a, "asdfasdfasfdasdfasdfasodfjasodfjasof")
+		time.Sleep(time.Millisecond * 100)
 	}
-	fmt.Println(len(s))
+
 }
