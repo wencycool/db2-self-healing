@@ -3,9 +3,8 @@ package db2
 import (
 	"errors"
 	"fmt"
-	logrus "github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"os/exec"
-	"os/user"
 	"reflect"
 	"strconv"
 	"strings"
@@ -39,10 +38,6 @@ func ConnectDB(dbname string) error {
 		return errors.New(string(bs))
 	}
 	return nil
-}
-func GetCurInstanceName() string {
-	u, _ := user.Current()
-	return u.Name
 }
 
 type MataData struct {

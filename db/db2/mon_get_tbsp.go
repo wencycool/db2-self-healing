@@ -69,7 +69,7 @@ type MonGetContainer struct {
 	TotalPages    int       `column:"TOTAL_PAGES"`
 	UsablePages   int       `column:"USABLE_PAGES"`
 	Accessiable   int32     `column:"ACCESSIBLE"`
-	FsId          string    `column:"FS_ID"`
+	FsId          string    `column:"FS_ID"` //文件系统挂载点或者设备的Dev，finfo,_ := os.Stat("/"),reflect.ValueOf(finfo.Sys()).Elem().FieldByName("Dev").Uint()
 	FsTotalSize   int       `column:"FS_TOTAL_SIZE"`
 	FsUsedSize    int       `column:"FS_USED_SIZE"`
 	StoragePathId int32     `column:"DB_STORAGE_PATH_ID"`

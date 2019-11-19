@@ -1,10 +1,15 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"os"
+	"reflect"
+)
 
 func main() {
-	fmt.Printf("\033[5;40;32m%s\033[0m", "test")
-	fmt.Printf("\n %c[5;40;32m%s%c[0m\n\n", 0x1B, "testPrintColor", 0x1B)
-	fmt.Println(0x1B)
-
+	finfo, _ := os.Stat("/")
+	r := reflect.ValueOf(finfo.Sys()).Elem().FieldByName("Dev").Uint()
+	fmt.Println(r)
+	r = reflect.ValueOf(finfo.Sys()).Elem().FieldByName("Ino").Uint()
+	fmt.Println(r)
 }

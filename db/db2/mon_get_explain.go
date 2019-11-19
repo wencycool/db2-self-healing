@@ -24,7 +24,8 @@ type MonGetExplain struct {
 //返回执行计划的结构体和错误信息
 func NewMonGetExplain(hexid string) (*MonGetExplain, error) {
 	self := new(MonGetExplain)
-	argSql := fmt.Sprintf("CALL EXPLAIN_FROM_SECTION(%s,'M',NULL,0,'%s',?,?,?,?,?)", hexid, strings.ToUpper(GetCurInstanceName()))
+	curInstanceName, _ := GetCurInstanceName()
+	argSql := fmt.Sprintf("CALL EXPLAIN_FROM_SECTION(%s,'M',NULL,0,'%s',?,?,?,?,?)", hexid, strings.ToUpper(curInstanceName))
 	cmd := exec.Command("db2", "-x", argSql)
 	bs, err := cmd.CombinedOutput()
 	if err != nil {
