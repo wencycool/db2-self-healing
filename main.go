@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"github.com/keepeye/logrus-filename"
 	"github.com/sirupsen/logrus"
@@ -12,12 +13,14 @@ import (
 )
 
 func init() {
-	//控制内存使用量100MB
-	vm.MemLimit(100 << 20)
+	//控制内存使用量500MB
+	vm.MemLimit(500 << 20)
 }
 func main() {
 	var dbname string
-	dbname = "sample"
+	//dbname = "sample"
+	flag.StringVar(&dbname, "d", "sample", "连接数据库名字")
+	flag.Parse()
 	var log *logrus.Logger
 	log = logrus.New()
 	filenameHook := filename.NewHook()
@@ -63,7 +66,7 @@ func main() {
 			uow.AppHandle, db2.ByteSizeFormat(uow.UowLogSpaceUsed), uow.UowStartTime.String(),
 			findSQL(uow.AppHandle))
 	}
-	fmt.Printf("\n当前是否存在锁等待?%s个\n", PrintColorf(len(locks), len(locks) > 0))
+	fmt.Printf("\n当前是否存在锁等待? %s个\n", PrintColorf(len(locks), len(locks) > 0))
 	lockHeaders := db2.GetLockHeaderMap(locks)
 	if len(lockHeaders) > 0 {
 		fmt.Printf("\033[1;40;32m[打印锁等待的Header信息]\033[0m\n")
@@ -124,23 +127,26 @@ func main() {
 		return Total_timeSpend
 	}()
 	for i, act := range act_stmts {
+		//SQL属性信息
+		pkgCacheStmt := db2.NewMonGetPkgCacheStmt(act.HexId)
 		fmt.Printf("  [第%d条语句] 执行次数:%-10d\n    相似SQL涉及APPHandle列表为:%s"+
-			"\n    执行语句：%s\n", i+1, act.ActCount, intListToStr(act.AppHandleList, ","), db2.NewMonGetPkgCacheStmt(act.HexId).StmtText)
+			"\n    执行者:%s\n    执行语句：%s\n", i+1, act.ActCount, intListToStr(act.AppHandleList, ","), act.AuthId, pkgCacheStmt.StmtText)
 		//耗时分析,分析当前语句执行耗时情况
 		if act.ActTime > 0 {
-			fmt.Printf("    \033[4;40;32m总执行时间占比:%-5d%%\033[0m,参与计算SQL数:%-5d,总执行时间:%-5dms,等待时间%-5dms,\n    数据逻辑读:%-10d,数据逻辑读:%-10d索引物理读:%-10d,索引逻辑读:%-10d,"+
+			fmt.Printf("    \033[4;40;32m总执行时间占比:%-5d%%\033[0m,参与计算SQL数:%-5d,总执行时间:%-5dms,等待时间:%-5dms,\n    数据逻辑读:%-10d,数据逻辑读:%-10d索引物理读:%-10d,索引逻辑读:%-10d,"+
 				"临时表空间逻辑读:%-10d,临时表空间物理读:%10d\n", act.TimeSpend*100/totalTimeSpend, act.ActDataCount, act.ActTime, act.ActWTime, act.PoolDLReads, act.PoolDPReads, act.PoolILReads,
 				act.PoolIPReads, act.PoolTmpDLReads, act.PoolTmpDPReads)
 		} else {
 			//因为activity表延迟采集数据的问题，导致本来毫秒执行完毕的SQL当执行花费几秒之内也不会被采集数据（10秒左右才会采集，或者其它触发点)
 			fmt.Printf("    \033[4;40;32m总执行时间占比:%-5d%%\033[0m\n", act.TimeSpend*100/totalTimeSpend)
 		}
-
-		//执行计划分析
-		fmt.Println("对每一个SQL进行解析，检查执行计划")
 		if act.HexId == "" {
 			continue
 		}
+
+		fmt.Println("    对每一个SQL进行解析，检查执行计划")
+		fmt.Printf("    语句属性:PackageSchema:%-10s,PackageName:%-20s,Section:%-3d,SQLType:%-10s\n", pkgCacheStmt.PkgSchema, pkgCacheStmt.PkgName, pkgCacheStmt.Section, pkgCacheStmt.SectionType)
+		//执行计划分析
 		expln, err := db2.NewMonGetExplain(act.HexId)
 		if err != nil {
 			fmt.Println(err)
@@ -149,21 +155,26 @@ func main() {
 			if objs, err := expln.GetObj(); err != nil {
 				fmt.Println(err)
 			} else {
+				runstatsTableList := make([]*db2.MonGetExplainObj, 0)
 				for _, obj := range objs {
 					fmt.Printf("    对象信息:,对象类型:%-10s,对象名:%-20s,统计信息记录数:%-10d,最近变更记录数:%-10d,"+
 						"索引FuKCard值:%-10d,是否小表突变?(%s)\n",
 						obj.ObjType, obj.ObjName, obj.RowCount, obj.SRowsModified, obj.FUKCard,
 						PrintColorf(obj.RowCount < obj.SRowsModified, obj.RowCount < obj.SRowsModified))
+					//如果变更记录过大则搜集统计信息
 					if obj.RowCount < obj.SRowsModified && obj.ObjType == "TA" {
-						//推荐做统计信息搜集
-						//当数据大于1000万则做system抽样，不要用BERNOULLI抽样并不会加快速度
-						tablesampledRatio := 100
-						if (obj.RowCount + obj.SRowsModified) > 10000000 {
-							tablesampledRatio = 20
-						}
-						fmt.Printf("    推荐执行:runstats on table %s.%s with distribution on all columns and sampled detailed index all allow write access tablesample system (%d)\n",
-							obj.ObjSchema, obj.ObjName, tablesampledRatio)
+						runstatsTableList = append(runstatsTableList, obj)
 					}
+				}
+				for _, obj := range runstatsTableList {
+					//推荐做统计信息搜集
+					//当数据大于1000万则做system抽样，不要用BERNOULLI抽样并不会加快速度
+					tablesampledRatio := 100
+					if (obj.RowCount + obj.SRowsModified) > 10000000 {
+						tablesampledRatio = 20
+					}
+					fmt.Printf("    推荐执行:runstats on table %s.%s with distribution on all columns and sampled detailed index all allow write access tablesample system (%d)\n",
+						obj.ObjSchema, obj.ObjName, tablesampledRatio)
 				}
 			}
 			//获取stream信息
@@ -174,14 +185,14 @@ func main() {
 				streamNode := db2.NewNode(streams)
 				//streamNode.PrintData()
 				t1 := time.Now()
-				fmt.Printf("检查是否包含HashJoin			%s    	--高并发交易SQL不应出现\n", PrintColorf(streamNode.HasHSJoin(), streamNode.HasHSJoin()))
-				fmt.Printf("检查NLJoin右子树是否包含IXAND:		%s    	--高并发交易SQL不应出现\n", PrintColorf(streamNode.HasRightOperatorIXAnd(), streamNode.HasRightOperatorIXAnd()))
-				fmt.Printf("检查NLJoin右子树是否包含TabScan：	%s		--任何SQL不应出现\n", PrintColorf(streamNode.HasRightOperatorTabScan(), streamNode.HasRightOperatorTabScan()))
-				fmt.Printf("打印一共花费时长:%s\n", time.Now().Sub(t1).String())
+				fmt.Printf("      检查是否包含HashJoin			%s    	--高并发交易SQL不应出现\n", PrintColorf(streamNode.HasHSJoin(), streamNode.HasHSJoin()))
+				fmt.Printf("      检查NLJoin右子树是否包含IXAND:		%s    	--高并发交易SQL不应出现\n", PrintColorf(streamNode.HasRightOperatorIXAnd(), streamNode.HasRightOperatorIXAnd()))
+				fmt.Printf("      检查NLJoin右子树是否包含TabScan：	%s		--任何SQL不应出现\n", PrintColorf(streamNode.HasRightOperatorTabScan(), streamNode.HasRightOperatorTabScan()))
+				fmt.Printf("      打印一共花费时长:%s\n", time.Now().Sub(t1).String())
 			}
 
 		}
-		fmt.Printf("    打印Advis信息,执行语句:db2advis -d %s -s \"%s\" -q %s -n %s \n", dbname, db2.NewMonGetPkgCacheStmt(act.HexId).StmtText, act.AuthId, act.AuthId)
+		fmt.Printf("    打印Advis信息,执行语句:db2advis -d %s -s \"%s\" -q %s -n %s \n", dbname, pkgCacheStmt.StmtText, act.AuthId, act.AuthId)
 
 	}
 	//测试执行计划
@@ -222,7 +233,7 @@ fmt.Printf("\n %c[1;40;32m%s%c[0m\n\n", 0x1B, "testPrintColor", 0x1B)
 //打印带颜色的输出
 func PrintColorf(a interface{}, flag bool) string {
 	if flag {
-		return fmt.Sprintf("%c[5;40;31m%v%c[0m", 0x1B, a, 0x1B)
+		return fmt.Sprintf("%c[5;47;31m%v%c[0m", 0x1B, a, 0x1B)
 	}
 	return fmt.Sprintf("%v", a)
 }
