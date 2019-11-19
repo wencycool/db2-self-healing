@@ -32,7 +32,7 @@ func main() {
 	if err := db2.ConnectDB(dbname); err != nil {
 		panic("Connect to db error:" + err.Error())
 	}
-	acts, Trxlogs, _, _, locks, utils, uow_extends, _ := db2.CollectPerfData(time.Duration(time.Second * 10))
+	acts, Trxlogs, _, locks, utils, uow_extends, _ := db2.CollectPerfData(time.Duration(time.Second * 10))
 	//整体情况分析：1、 是否存在大事务；2、找出最古老事务；3、当前活动连接情况；4、当前锁等待情况
 	//给定一个APP查看当前SQL语句或者最近一次SQL语句
 	findSQL := func(appHandle int32) string {

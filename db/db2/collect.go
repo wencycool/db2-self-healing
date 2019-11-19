@@ -11,16 +11,15 @@ import (
 
 //获取所有性能相关数据
 //设置5秒的超时时间
-func CollectPerfData(duration time.Duration) ([]*MonGetActStmt, []*MonGetTrxLog, []*MonGetHadr, []*MonGetCurUow, []*MonGetLockWait, []*MonGetUtil, []*MonGetCurUowExtend, error) {
+func CollectPerfData(duration time.Duration) ([]*MonGetActStmt, []*MonGetTrxLog, []*MonGetHadr, []*MonGetLockWait, []*MonGetUtil, []*MonGetCurUowExtend, error) {
 	mon_get_act_stmt := NewMonGetActStmt()
 	mon_get_trx_log := NewMonGetTrxLog()
 	mon_get_hdr := NewMonGetHadr()
-	mon_get_cur_uow := NewMonGetCurUow()
 	mon_get_lockwait := NewMonGetLockWait()
 	mon_get_util := NewMonGetUtil()
 	mon_get_cur_uow_extend := NewMonGetCurUowExtend()
 	sql_text_list := []string{mon_get_act_stmt.GetSqlText(), mon_get_trx_log.GetSqlText(),
-		mon_get_hdr.GetSqlText(), mon_get_cur_uow.GetSqlText(),
+		mon_get_hdr.GetSqlText(),
 		mon_get_lockwait.GetSqlText(), mon_get_util.GetSqlText(),
 		mon_get_cur_uow_extend.GetSqlText()}
 	t1 := time.Now()
@@ -50,15 +49,10 @@ func CollectPerfData(duration time.Duration) ([]*MonGetActStmt, []*MonGetTrxLog,
 		}
 	}
 	if err != nil {
-		return nil, nil, nil, nil, nil, nil, nil, err
+		return nil, nil, nil, nil, nil, nil, err
 	}
 	return GetMonGetActStmtList(result), GetMonGetTrxLogList(result),
-		GetMonGetHadrList(result), GetMonGetCurUowList(result),
+		GetMonGetHadrList(result),
 		GetMonGetLockWaitList(result), GetMonGetUtilList(result), GetMonGetCurUowExtendList(result), nil
-
-}
-
-//获取表空间数据
-func CollectTbspData(db string, duration time.Duration) {
 
 }
