@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-//act中只包含目前正在执行的SQL，并不包含处于等待状态的SQL
+//act中只包含目前正在执行的SQL
 type MonGetActStmt struct {
 	MataData
 	SnapTime        time.Time `column:"CURRENT TIMESTAMP"`

@@ -58,7 +58,7 @@ func main() {
 
 	}
 	//日志空间使用率超过400MB即称作为大事务
-	BigTrxLogLimit := 100 << 20 //400MB
+	BigTrxLogLimit := 400 << 20 //400MB
 	bigTrxUow := db2.BigTrxUow(uow_extends, BigTrxLogLimit)
 	fmt.Printf("\n当前是否存在大事务?(%s) %s个\n", PrintColorf(len(bigTrxUow) > 0, len(bigTrxUow) > 0), PrintColorf(len(bigTrxUow), len(bigTrxUow) > 0))
 	for _, uow := range bigTrxUow {

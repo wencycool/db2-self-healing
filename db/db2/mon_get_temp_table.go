@@ -60,3 +60,62 @@ func NewMonGetTempTableList() []*MonGetTempTable {
 
 	return ms
 }
+
+//按照AppHandle和TbspId进行聚合,主要解决临时表空间占用的问题
+type TempSpaceInfo struct {
+	AppHandle  int32
+	TbspId     int32
+	RowsRead   int
+	RowsInsert int
+	RowsUpdate int
+	RowsDelete int
+	DataLPages int
+	IdxLPages  int
+}
+
+//以TbspId和AppHandle为单位进行聚合计算空间使用大小
+func GetTempSpaceInfoAggByTbspIdAndAppHandle(ts []*MonGetTempTable) []*TempSpaceInfo {
+	tempSpaceInfoList := make([]*TempSpaceInfo, 0)
+	ts_map := make(map[[2]int32]*TempSpaceInfo, 0)
+	for _, t := range ts {
+		key := [2]int32{t.TbspId, t.AppHandle}
+		if _, ok := ts_map[key]; ok {
+			//所有int数据进行累加
+			ts_map[key].RowsRead = ts_map[key].RowsRead + t.RowsRead
+			ts_map[key].RowsInsert = ts_map[key].RowsInsert + t.RowsInsert
+			ts_map[key].RowsUpdate = ts_map[key].RowsUpdate + t.RowsUpdate
+			ts_map[key].RowsDelete = ts_map[key].RowsDelete + t.RowsDelete
+			ts_map[key].DataLPages = ts_map[key].DataLPages + t.DataLPages
+			ts_map[key].IdxLPages = ts_map[key].IdxLPages + t.IdxLPages
+
+		} else {
+			ts_map[key] = &TempSpaceInfo{
+				AppHandle:  t.AppHandle,
+				TbspId:     t.TbspId,
+				RowsRead:   t.RowsRead,
+				RowsInsert: t.RowsInsert,
+				RowsUpdate: t.RowsUpdate,
+				RowsDelete: t.RowsDelete,
+				DataLPages: t.DataLPages,
+				IdxLPages:  t.IdxLPages,
+			}
+		}
+	}
+	for k, _ := range ts_map {
+		tempSpaceInfoList = append(tempSpaceInfoList, ts_map[k])
+	}
+	return tempSpaceInfoList
+}
+
+//获取指定表空间上AppHandle占用的临时表空间大小和总占用页面数,按照使用率的降序排列
+func GetTempSpaceInfoListByTbspId(ts []*TempSpaceInfo, id int32) ([]*TempSpaceInfo, int) {
+	tempSpaceInfoList := make([]*TempSpaceInfo, 0)
+	sumTotalPages := 0
+	for _, t := range ts {
+		if t.TbspId == id {
+			tempSpaceInfoList = append(tempSpaceInfoList, t)
+			sumTotalPages = sumTotalPages + t.DataLPages + t.IdxLPages
+		}
+	}
+	return tempSpaceInfoList, sumTotalPages
+}

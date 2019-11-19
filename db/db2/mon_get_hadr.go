@@ -5,7 +5,7 @@ import (
 	"time"
 )
 
-//记录活动日志的信息，每个数据库就一条该信息
+//记录Hadr同步状态信息
 type MonGetHadr struct {
 	MataData
 	SnapTime        time.Time `column:"CURRENT TIMESTAMP"`
