@@ -29,18 +29,17 @@ type AdvisIndex struct {
 	Size      int    //byte,预计索引大小
 }
 
-//!!!目前该函数需要调试，在exec.Command命令下无法执行db2advis
+//获取索引建议信息，但是执行较慢，建议并行执行或者一次执行多条SQL
 func getAdvisRaw(dbname, schema, sql string) (*AdvisRaw, error) {
 	advis := new(AdvisRaw)
 	advis.Schema = schema
 	advis.StmtText = sql
-	args := fmt.Sprintf("-d %s -q %s -n %s -s \"%s\"", dbname, schema, schema, sql)
-	cmd := exec.Command("db2advis", args)
-	fmt.Println(cmd.String())
+	args := []string{"-d", dbname, "-q", schema, "-n", schema, "-s", sql}
+	cmd := exec.Command("db2advis", args...)
 	bs, err := cmd.CombinedOutput()
 	result := string(bs)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("SQL:%s;result:%s", "db2advis"+args, result))
+		return nil, errors.New(fmt.Sprintf("SQL:%s;result:%s", "db2advis"+strings.Join(args, " "), result))
 	}
 	//解析advis语句
 	pattern := regexp.MustCompile(`total disk space needed for initial set\s*\[\s*(?P<totalSize>\d+)(?:.\d+)*\] MB
@@ -85,7 +84,7 @@ total disk space constrained to\s+\[\s*(?P<needSize>\d+)(?:.\d+)\] MB
 	}
 	startPos := strings.Index(result, "LIST OF RECOMMENDED INDEXES")
 	endPos = strings.Index(result, "RECOMMENDED EXISTING INDEXES")
-	pattern = regexp.MustCompile(`-- index\[1\],\s+(?P<indexSize>0.532)MB(?s:.+)(?P<index>CREATE INDEX(?s:.+?)"(?P<idxSchema>.+?)"\."(?P<idxName>.+?)"(?s:.+?)ON(?s:.+?)"(?P<tabSchema>.+?)"\."(?P<tabName>.+?)"(?s:.+?));(?s:.+?)COMMIT WORK`)
+	pattern = regexp.MustCompile(`-- index\[\d+\],\s+(?P<indexSize>\d+)(?:.\d+)*MB\n(?s:.+)(?P<index>CREATE INDEX(?s:.+?)"(?P<idxSchema>.+?)"\."(?P<idxName>.+?)"(?s:.+?)ON(?s:.+?)"(?P<tabSchema>.+?)"\."(?P<tabName>.+?)"(?s:.+?));(?s:.+?)COMMIT WORK`)
 	for _, submatch := range pattern.FindAllStringSubmatch(result[startPos:endPos], -1) {
 		idx := new(AdvisIndex)
 		if size, err := strconv.Atoi(submatch[1]); err != nil {
