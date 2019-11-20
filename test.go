@@ -1,15 +1,13 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	"reflect"
+	"os/exec"
 )
 
 func main() {
-	finfo, _ := os.Stat("/")
-	r := reflect.ValueOf(finfo.Sys()).Elem().FieldByName("Dev").Uint()
-	fmt.Println(r)
-	r = reflect.ValueOf(finfo.Sys()).Elem().FieldByName("Ino").Uint()
-	fmt.Println(r)
+	cmd := exec.Command("db2advis", "-d SAMPLE")
+	cmd.Stdout = os.Stdout
+	os.Stdout.WriteString(cmd.String())
+	cmd.Run()
 }
