@@ -84,7 +84,7 @@ total disk space constrained to\s+\[\s*(?P<needSize>\d+)(?:.\d+)\] MB
 	}
 	startPos := strings.Index(result, "LIST OF RECOMMENDED INDEXES")
 	endPos = strings.Index(result, "RECOMMENDED EXISTING INDEXES")
-	pattern = regexp.MustCompile(`-- index\[\d+\],\s+(?P<indexSize>\d+)(?:.\d+)*MB\n(?s:.+)(?P<index>CREATE INDEX(?s:.+?)"(?P<idxSchema>.+?)"\."(?P<idxName>.+?)"(?s:.+?)ON(?s:.+?)"(?P<tabSchema>.+?)"\."(?P<tabName>.+?)"(?s:.+?));(?s:.+?)COMMIT WORK`)
+	pattern = regexp.MustCompile(`-- index\[\d+\],\s+(?P<indexSize>\d+)(?:.\d+)*MB\n(?s:.+)(?P<index>CREATE.+INDEX(?s:.+?)"(?P<idxSchema>.+?)"\."(?P<idxName>.+?)"(?s:.+?)ON(?s:.+?)"(?P<tabSchema>.+?)"\."(?P<tabName>.+?)"(?s:.+?));(?s:.+?)COMMIT WORK`)
 	for _, submatch := range pattern.FindAllStringSubmatch(result[startPos:endPos], -1) {
 		idx := new(AdvisIndex)
 		if size, err := strconv.Atoi(submatch[1]); err != nil {
