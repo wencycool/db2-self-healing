@@ -11,7 +11,7 @@ type MonGetHadr struct {
 	SnapTime        time.Time `column:"CURRENT TIMESTAMP"`
 	HdrRole         string    `column:"HADR_ROLE"`     //hadr主从角色
 	HdrMode         string    `column:"HADR_SYNCMODE"` //hadr复制模式,ASYNC,STANDBY ,SYNC ,SUPERASYNC
-	StandbyId       int32     `column:"STANDBY_ID"`
+	StandbyId       int64     `column:"STANDBY_ID"`
 	HdrState        string    `column:"HADR_STATE"`          //bytes
 	PrimaryHost     string    `column:"PRIMARY_MEMBER_HOST"` //第一个活动日志号
 	PrimaryInstance string    `column:"PRIMARY_INSTANCE"`

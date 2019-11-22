@@ -15,7 +15,7 @@ func CurrentAppId() string {
 	return strings.TrimSpace(string(bs))
 }
 
-func CurrentAppHandle() int32 {
+func CurrentAppHandle() int64 {
 	bs, err := exec.Command("db2", "-x", "values mon_get_application_handle()").CombinedOutput()
 	if err != nil {
 		return -1
@@ -24,5 +24,5 @@ func CurrentAppHandle() int32 {
 	if err != nil {
 		return -1
 	}
-	return int32(r)
+	return int64(r)
 }

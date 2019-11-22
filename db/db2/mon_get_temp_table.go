@@ -13,14 +13,14 @@ import (
 type MonGetTempTable struct {
 	SnapTime   time.Time `column:"CURRENT TIMESTAMP"`
 	TabType    string    `column:"TAB_TYPE"` //TEMP_TABLE系统临时表,USER_TABLE用户临时表
-	TbspId     int32     `column:"TBSP_ID"`
+	TbspId     int64     `column:"TBSP_ID"`
 	RowsRead   int       `column:"ROWS_READ"`
 	RowsInsert int       `column:"ROWS_INSERTED"`
 	RowsUpdate int       `column:"ROWS_UPDATED"`
 	RowsDelete int       `column:"ROWS_DELETED"`
 	DataLPages int       `column:"DATA_OBJECT_L_PAGES"`
 	IdxLPages  int       `column:"INDEX_OBJECT_L_PAGES"`
-	AppHandle  int32
+	AppHandle  int64
 	TabSchema  string `column:"TABSCHEMA"`
 	TabName    string `column:"TABNAME"`
 }
@@ -53,7 +53,7 @@ func NewMonGetTempTableList() []*MonGetTempTable {
 			log.Warn(err)
 			continue
 		}
-		d.AppHandle = int32(handle)
+		d.AppHandle = int64(handle)
 		d.TabSchema = submatch[0][2]
 		ms = append(ms, d)
 	}
@@ -63,8 +63,8 @@ func NewMonGetTempTableList() []*MonGetTempTable {
 
 //按照AppHandle和TbspId进行聚合,主要解决临时表空间占用的问题
 type TempSpaceInfo struct {
-	AppHandle  int32
-	TbspId     int32
+	AppHandle  int64
+	TbspId     int64
 	RowsRead   int
 	RowsInsert int
 	RowsUpdate int
@@ -76,9 +76,9 @@ type TempSpaceInfo struct {
 //以TbspId和AppHandle为单位进行聚合计算空间使用大小
 func GetTempSpaceInfoAggByTbspIdAndAppHandle(ts []*MonGetTempTable) []*TempSpaceInfo {
 	tempSpaceInfoList := make([]*TempSpaceInfo, 0)
-	ts_map := make(map[[2]int32]*TempSpaceInfo, 0)
+	ts_map := make(map[[2]int64]*TempSpaceInfo, 0)
 	for _, t := range ts {
-		key := [2]int32{t.TbspId, t.AppHandle}
+		key := [2]int64{t.TbspId, t.AppHandle}
 		if _, ok := ts_map[key]; ok {
 			//所有int数据进行累加
 			ts_map[key].RowsRead = ts_map[key].RowsRead + t.RowsRead
@@ -108,7 +108,7 @@ func GetTempSpaceInfoAggByTbspIdAndAppHandle(ts []*MonGetTempTable) []*TempSpace
 }
 
 //获取指定表空间上AppHandle占用的临时表空间大小和总占用页面数,按照使用率的降序排列
-func GetTempSpaceInfoListByTbspId(ts []*TempSpaceInfo, id int32) ([]*TempSpaceInfo, int) {
+func GetTempSpaceInfoListByTbspId(ts []*TempSpaceInfo, id int64) ([]*TempSpaceInfo, int) {
 	tempSpaceInfoList := make([]*TempSpaceInfo, 0)
 	sumTotalPages := 0
 	for _, t := range ts {

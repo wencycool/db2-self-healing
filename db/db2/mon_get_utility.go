@@ -8,13 +8,13 @@ import (
 type MonGetUtil struct {
 	MataData
 	SnapTime       time.Time `column:"CURRENT TIMESTAMP"`
-	AppHandle      int32     `column:"APPLICATION_HANDLE"`
+	AppHandle      int64     `column:"APPLICATION_HANDLE"`
 	AppId          string    `column:"APPLICATION_ID"`
 	AppName        string    `column:"APPLICATION_NAME"`
 	SessionId      string    `column:"SESSION_AUTH_ID"`        //记录连接数据库使用的用户
 	ClientUser     string    `column:"CLIENT_USERID"`          //记录客户端登录用户
 	ClientAppName  string    `column:"CLIENT_APPLNAME"`        //记录客户端发起的程序名称
-	UtilId         int32     `column:"UTILITY_ID"`             //作业id，分区内唯一
+	UtilId         int64     `column:"UTILITY_ID"`             //作业id，分区内唯一
 	UtilStartTime  time.Time `column:"UTILITY_START_TIME"`     //作业开始时间
 	UtilType       string    `column:"UTILITY_TYPE"`           //作业类型
 	UtilOperType   string    `column:"UTILITY_OPERATION_TYPE"` //作业操作类型,dela,full,处于哪种状态等

@@ -13,16 +13,16 @@ type MonGetActStmt struct {
 	SnapTime        time.Time `column:"CURRENT TIMESTAMP"`
 	StartTime       time.Time `column:"LOCAL_START_TIME"`
 	TimeSpend       int       `column:"INT((CURRENT TIMESTAMP - LOCAL_START_TIME)*1000) AS TIMESPEND"` //已执行时间毫秒
-	AppHandle       int32     `column:"APPLICATION_HANDLE"`
-	ActId           int32     `column:"ACTIVITY_ID"`
-	UowId           int32     `column:"UOW_ID"`
+	AppHandle       int64     `column:"APPLICATION_HANDLE"`
+	ActId           int64     `column:"ACTIVITY_ID"`
+	UowId           int64     `column:"UOW_ID"`
 	ActType         string    `column:"ACTIVITY_TYPE"`
-	StmtId          int32     `column:"STMTID"`
-	PlanId          int32     `column:"PLANID"`
+	StmtId          int64     `column:"STMTID"`
+	PlanId          int64     `column:"PLANID"`
 	HexId           string    `column:"EXECUTABLE_ID"`
-	StmtNo          int32     `column:"STMTNO"`
+	StmtNo          int64     `column:"STMTNO"`
 	ActState        string    `column:"ACTIVITY_STATE"`
-	NestLevel       int32     `column:"NESTING_LEVEL"`  //记录嵌套层深，值越大说明被调用的层数越深
+	NestLevel       int64     `column:"NESTING_LEVEL"`  //记录嵌套层深，值越大说明被调用的层数越深
 	ActTime         int       `column:"TOTAL_ACT_TIME"` //总的执行时间milliseconds
 	CpuTime         int       `column:"TOTAL_CPU_TIME"`
 	ActWTime        int       `column:"TOTAL_ACT_WAIT_TIME"`
@@ -90,7 +90,7 @@ type MonGetActStmtPlanid struct {
 	RootHexId     string  //该SQL调用者，如果RootHexId等同于HexId则该SQL未被任何调用
 	ActCount      int     //一共发生的聚合次数
 	ActDataCount  int     //聚合后mon_get_activity表中有指标记录的集合次数，但是TimeSpend会聚合所有的
-	AppHandleList []int32 //存放相同Planid的application handle
+	AppHandleList []int64 //存放相同Planid的application handle
 }
 
 type MonGetActStmtPlanidList []*MonGetActStmtPlanid
@@ -107,8 +107,8 @@ func (m MonGetActStmtPlanidList) Swap(i, j int) {
 
 //所有id属性的数据类型in32,int64不参与聚合，int类型参与聚合并按照执行次数从大到小排序
 func GetMonGetActStmtAggByPlanid(acts []*MonGetActStmt) []*MonGetActStmtPlanid {
-	ByPlanidMap := make(map[int32]*MonGetActStmtPlanid)
-	HexIdMap := make(map[int32]string, 0) //存放每一个apphandle的nestlevel=0的Hexid
+	ByPlanidMap := make(map[int64]*MonGetActStmtPlanid)
+	HexIdMap := make(map[int64]string, 0) //存放每一个apphandle的nestlevel=0的Hexid
 	ByPlanidList := make([]*MonGetActStmtPlanid, 0)
 	for _, act := range acts {
 		//存放nestlevel=0的HexId
@@ -154,7 +154,7 @@ func GetMonGetActStmtAggByPlanid(acts []*MonGetActStmt) []*MonGetActStmtPlanid {
 			if actTimeVal := actObj_value.FieldByName("ActTime"); actTimeVal.CanAddr() && actTimeVal.Int() > 0 {
 				actCnt++
 			}
-			AppHandleList := make([]int32, 0)
+			AppHandleList := make([]int64, 0)
 			AppHandleList = append(AppHandleList, act.AppHandle)
 			ByPlanidMap[act.PlanId] = &MonGetActStmtPlanid{act, hexid, 1, actCnt, AppHandleList}
 		}

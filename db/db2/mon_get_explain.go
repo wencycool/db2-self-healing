@@ -280,7 +280,7 @@ type MonGetExplainOperator struct {
 	ExplnLevel string    `column:"EXPLAIN_LEVEL"`
 	StmtNo     int       `column:"STMTNO"`
 	SectionNo  int       `column:"SECTNO"`
-	OpId       int32     `column:"OPERATOR_ID"` //在一个explain中唯一
+	OpId       int64     `column:"OPERATOR_ID"` //在一个explain中唯一
 	OPType     string    `column:"OPERATOR_TYPE"`
 	TotalCost  int       `column:"TOTAL_COST"`
 	IoCost     int       `column:"IO_COST"`
@@ -290,7 +290,7 @@ type MonGetExplainOperator struct {
 type MonGetExplainOperatorList []*MonGetExplainOperator
 
 //根据operatorid返回该operator
-func (m MonGetExplainOperatorList) LookupOperatorById(operatorId int32) (*MonGetExplainOperator, bool) {
+func (m MonGetExplainOperatorList) LookupOperatorById(operatorId int64) (*MonGetExplainOperator, bool) {
 	for i, _ := range m {
 		if m[i].OpId == operatorId && operatorId != -1 {
 			return m[i], true

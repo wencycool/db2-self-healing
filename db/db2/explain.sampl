@@ -1,0 +1,1790 @@
+select a.CHAR_COL8,b.VARCHAR_COL25 from ttt a,t1 b where a.VARCHAR_COL25=b.VARCHAR_COL25 and a.VARCHAR_COL26=b.VARCHAR_COL26 and b.VARCHAR_COL27='sadf' and b.VARCHAR_COL28='suiji' with ur
+/*
+<OPTGUIDELINES>
+  <NLJOIN>
+    <TBSCAN  TABLE='a' FIRST='TRUE'/>
+    <IXAND TABLE='b'>
+      <INDEX IXNAME='T1_IDX3'/>
+      <INDEX IXNAME='T1_IDX4'/>
+    </IXAND>
+  </NLJOIN>
+</OPTGUIDELINES>
+*/
+Access Plan:
+-----------
+        Total Cost:             229019
+        Query Degree:           1
+
+                 Rows
+                RETURN
+                (   1)
+                 Cost
+                  I/O
+                  |
+              1.20779e-10
+                NLJOIN
+                (   2)
+                229019
+                194121
+         /--------+--------\
+     581853              2.07577e-16
+     TBSCAN                FETCH
+     (   3)                (   4)
+     225522                14.1078
+     194085                2.00007
+       |                /----+-----\
+     581853       6.53552e-05       15301
+ TABLE: DB2INST1    RIDSCN     TABLE: DB2INST1
+       TTT          (   5)           T1
+       Q2           14.1072          Q1
+                       2
+                      |
+                  6.53552e-05
+                    SORT
+                    (   6)
+                    14.107
+                       2
+                      |
+                  6.53552e-05
+                    IXAND
+                    (   7)
+                    14.1067
+                       2
+                /-----+------\
+               1                1
+            IXSCAN           IXSCAN
+            (   8)           (   9)
+            7.05392          7.05268
+               1                1
+              |                |
+             15301            15301
+        INDEX: DB2INST1  INDEX: DB2INST1
+            T1_IDX3          T1_IDX4
+              Q1               Q1
+
+            Monitoring Information
+
+Instance name                                  = db2inst1
+Node name                                      =
+Node type                                      = Enterprise Server Edition with local and remote clients
+Snapshot timestamp                             = 11/22/2019 21:49:52.423767
+
+
+            Application Snapshot
+
+
+Application handle                         = 4672
+Application status                         = UOW Waiting
+Status change time                         = 11/22/2019 21:49:52.416855
+Application code page                      = 1386
+Application country/region code            = 1
+DUOW correlation token                     = *LOCAL.db2inst1.191122134941
+Application name                           = db2batch
+Application ID                             = *LOCAL.db2inst1.191122134941
+Sequence number                            = 00001
+TP Monitor client user ID                  =
+TP Monitor client workstation name         = t-test-db02
+TP Monitor client application name         = DB2BATCH
+TP Monitor client accounting string        =
+
+CONNECT Authorization ID                   = DB2INST1
+Client login ID                            = db2inst1
+Configuration NNAME of client              = t-test-db02
+Client database manager product ID         = SQL10055
+Process ID of client application           = 97659
+Platform of client application             = LINUXAMD64
+Communication protocol of client           = Local Client
+
+Database name                              = SAMPLE
+Database path                              = /home/db2inst1/db2inst1/NODE0000/SQL00001/MEMBER0000/
+Client database alias                      = SAMPLE
+Input database alias                       =
+The highest authority level granted        =
+        Direct DBADM authority
+        Direct SECADM authority
+        Indirect SYSADM authority
+        Indirect CREATETAB authority
+        Indirect BINDADD authority
+        Indirect CONNECT authority
+        Indirect IMPLICIT_SCHEMA authority
+
+Coordinator member number                  = 0
+Coordinator agent process or thread ID     = 102
+
+Agents associated with the application     = 1
+
+
+Connection request start timestamp         = 11/22/2019 21:49:41.687393
+Connect request completion timestamp       = 11/22/2019 21:49:41.687653
+Application idle time                      = 0
+Inbound communication address              = *LOCAL.db2inst1
+
+Last reset timestamp                       = 11/22/2019 21:49:41.690150
+Agents stolen                              = 0
+Agents waiting on locks                    = 0
+Maximum associated agents                  = 1
+Priority at which application agents work  = 0
+Priority type                              = Dynamic
+Locks held by application                  = 2
+Lock waits since connect                   = 0
+Time application waited on locks (ms)      = 0
+Deadlocks detected                         = 0
+Lock escalations                           = 0
+Exclusive lock escalations                 = 0
+Number of Lock Timeouts since connected    = 0
+Total time UOW waited on locks (ms)        = 0
+
+Total sorts                                = 0
+Total sort time (ms)                       = 0
+Total sort overflows                       = 0
+
+Buffer pool data logical reads             = 208656
+Buffer pool data physical reads            = 6322
+Buffer pool temporary data logical reads   = 0
+Buffer pool temporary data physical reads  = 0
+Buffer pool data writes                    = 0
+Buffer pool index logical reads            = 1213156
+Buffer pool index physical reads           = 3
+Buffer pool temporary index logical reads  = 0
+Buffer pool temporary index physical reads = 0
+Buffer pool index writes                   = 0
+Buffer pool xda logical reads              = 0
+Buffer pool xda physical reads             = 0
+Buffer pool temporary xda logical reads    = 0
+Buffer pool temporary xda physical reads   = 0
+Buffer pool xda writes                     = 0
+Total buffer pool read time (milliseconds) = 6340
+Total buffer pool write time (milliseconds)= 0
+Time waited for prefetch (ms)              = 226
+Unread prefetch pages                      = 0
+Direct reads                               = 0
+Direct writes                              = 0
+Direct read requests                       = 0
+Direct write requests                      = 0
+Direct reads elapsed time (ms)             = 0
+Direct write elapsed time (ms)             = 0
+
+Number of SQL requests since last commit   = 4
+Commit statements                          = 0
+Rollback statements                        = 0
+Dynamic SQL statements attempted           = 1
+Static SQL statements attempted            = 0
+Failed statement operations                = 0
+Select SQL statements executed             = 1
+Xquery statements executed                 = 0
+Update/Insert/Delete statements executed   = 0
+DDL statements executed                    = 0
+Internal automatic rebinds                 = 0
+Internal rows deleted                      = 0
+Internal rows inserted                     = 0
+Internal rows updated                      = 0
+Internal commits                           = 0
+Internal rollbacks                         = 0
+Internal rollbacks due to deadlock         = 0
+Binds/precompiles attempted                = 0
+Rows deleted                               = 0
+Rows inserted                              = 0
+Rows updated                               = 0
+Rows selected                              = 0
+Rows read                                  = 606577
+Rows written                               = 0
+
+UOW log space used (Bytes)                 = 0
+Previous UOW completion timestamp          = 11/22/2019 21:49:41.687653
+Elapsed time of last completed uow (sec.ms)= 0.000000
+UOW start timestamp                        = 11/22/2019 21:49:41.689074
+UOW stop timestamp                         = 01/01/1970 08:00:00.000000
+UOW completion status                      = 0
+
+Open remote cursors                        = 0
+Open remote cursors with blocking          = 0
+Rejected Block Remote Cursor requests      = 0
+Accepted Block Remote Cursor requests      = 2
+Open local cursors                         = 0
+Open local cursors with blocking           = 0
+Total User CPU Time used by agent (s)      = 4.291829
+Total System CPU Time used by agent (s)    = 0.000000
+Host execution elapsed time                = 10.726216
+
+Package cache lookups                      = 1
+Package cache inserts                      = 1
+Application section lookups                = 2
+Application section inserts                = 1
+Catalog cache lookups                      = 21
+Catalog cache inserts                      = 0
+Catalog cache overflows                    = 0
+Catalog cache heap full                    = 0
+Catalog cache high water mark              = 0
+
+Number of hash joins                       = 0
+Number of hash loops                       = 0
+Number of hash join overflows              = 0
+Number of small hash join overflows        = 0
+
+
+Statement type                             = Dynamic SQL Statement
+Statement                                  = Close
+Section number                             = 4
+Application creator                        = NULLID
+Package name                               = SYSSN400
+Consistency Token                          =
+Package Version ID                         =
+Cursor name                                = SQL_CURSN400C4
+Statement member number                    = 0
+Statement start timestamp                  = 11/22/2019 21:49:41.692929
+Statement stop timestamp                   = 11/22/2019 21:49:52.416852
+Elapsed time of last completed stmt(sec.ms)= 0.000026
+Total Statement user CPU time              = 4.289397
+Total Statement system CPU time            = 0.000000
+SQL compiler cost estimate in timerons     = 229019
+SQL compiler cardinality estimate          = 1
+Degree of parallelism requested            = 1
+Number of agents working on statement      = 1
+Number of subagents created for statement  = 1
+Statement sorts                            = 0
+Total sort time                            = 0
+Sort overflows                             = 0
+Rows read                                  = 606577
+Rows written                               = 0
+Internal rows deleted                      = 0
+Internal rows updated                      = 0
+Internal rows inserted                     = 0
+Rows fetched                               = 0
+Buffer pool data logical reads             = 208656
+Buffer pool data physical reads            = 6322
+Buffer pool temporary data logical reads   = 0
+Buffer pool temporary data physical reads  = 0
+Buffer pool index logical reads            = 1213156
+Buffer pool index physical reads           = 3
+Buffer pool temporary index physical reads = 0
+Buffer pool xda logical reads              = 0
+Buffer pool xda physical reads             = 0
+Buffer pool temporary xda logical reads    = 0
+Buffer pool temporary xda physical reads   = 0
+Blocking cursor                            = YES
+Dynamic SQL statement text:select a.CHAR_COL8,b.VARCHAR_COL25 from ttt a,t1 b where a.VARCHAR_COL25=b.VARCHAR_COL25 and a.VARCHAR_COL26=b.VARCHAR_COL26 and b.VARCHAR_COL27='sadf' and b.VARCHAR_COL28='suiji' with ur /*
+<OPTGUIDELINES>
+  <NLJOIN>
+    <TBSCAN  TABLE='a' FIRST='TRUE'/>
+    <IXAND TABLE='b'>
+      <INDEX IXNAME='T1_IDX3'/>
+      <INDEX IXNAME='T1_IDX4'/>
+    </IXAND>
+  </NLJOIN>
+</OPTGUIDELINES>
+*/
+
+
+
+Agent process/thread ID                    = 102
+
+Memory usage for application:
+
+  Node number                                  = 0
+    Memory Pool Type                           = Other Memory
+       Current size (bytes)                    = 196608
+       High water mark (bytes)                 = 196608
+       Configured size (bytes)                 = 1911857152
+
+
+
+* Summary Table:
+
+Type      Number      Repetitions Total Time (s) Min Time (s)   Max Time (s)   Arithmetic Mean Geometric Mean Row(s) Fetched Row(s) Output
+--------- ----------- ----------- -------------- -------------- -------------- --------------- -------------- -------------- -------------
+Statement           1           1      10.724396      10.724396      10.724396       10.724396      10.724396              0             0
+
+* Total Entries:              1
+* Total Time:                10.724396 seconds
+* Minimum Time:              10.724396 seconds
+* Maximum Time:              10.724396 seconds
+* Arithmetic Mean Time:      10.724396 seconds
+* Geometric Mean Time:       10.724396 seconds
+---------------------------------------------
+* Timestamp: Fri Nov 22 2019 21:49:52 CST
+
+
+
+
+select a.CHAR_COL8,b.VARCHAR_COL25 from ttt a,t1 b,t2 c  where a.VARCHAR_COL25=b.VARCHAR_COL25 and a.VARCHAR_COL26=b.VARCHAR_COL26 and b.VARCHAR_COL27='sadf' and b.VARCHAR_COL28='suiji' and a.char_col10=c.char_col10 with ur
+/*
+<OPTGUIDELINES>
+	<NLJOIN>
+	  <TBSCAN TABLE='a' FIRST='TRUE'/>
+	  <IXSCAN TABLE='b' INDEX='T1_IDX4'/>
+	</NLJOIN>
+</OPTGUIDELINES>
+*/
+
+
+Access Plan:
+-----------
+        Total Cost:             232014
+        Query Degree:           1
+
+                           Rows
+                          RETURN
+                          (   1)
+                           Cost
+                            I/O
+                            |
+                        2.43072e-12
+                          NLJOIN
+                          (   2)
+                          232014
+                          197951
+                  /---------+----------\
+            1.20779e-10               0.0201254
+              NLJOIN                   TBSCAN
+              (   3)                   (   7)
+              227524                   4490.64
+              194088                    3863
+         /------+-------\                |
+     581853           2.07577e-16       11710
+     TBSCAN             FETCH      TABLE: DB2INST1
+     (   4)             (   5)           T2
+     225522             14.0995          Q1
+     194085                2
+       |              /---+----\
+     581853          1          15301
+ TABLE: DB2INST1  IXSCAN   TABLE: DB2INST1
+       TTT        (   6)         T1
+       Q3         7.05268        Q2
+                     1
+                    |
+                   15301
+              INDEX: DB2INST1
+                  T1_IDX4
+                    Q2
+
+            Application Snapshot
+
+
+Application handle                         = 4664
+Application status                         = UOW Waiting
+Status change time                         = 11/22/2019 21:41:11.977510
+Application code page                      = 1386
+Application country/region code            = 1
+DUOW correlation token                     = *LOCAL.db2inst1.191122134103
+Application name                           = db2batch
+Application ID                             = *LOCAL.db2inst1.191122134103
+Sequence number                            = 00001
+TP Monitor client user ID                  =
+TP Monitor client workstation name         = t-test-db02
+TP Monitor client application name         = DB2BATCH
+TP Monitor client accounting string        =
+
+CONNECT Authorization ID                   = DB2INST1
+Client login ID                            = db2inst1
+Configuration NNAME of client              = t-test-db02
+Client database manager product ID         = SQL10055
+Process ID of client application           = 67426
+Platform of client application             = LINUXAMD64
+Communication protocol of client           = Local Client
+
+Database name                              = SAMPLE
+Database path                              = /home/db2inst1/db2inst1/NODE0000/SQL00001/MEMBER0000/
+Client database alias                      = SAMPLE
+Input database alias                       =
+The highest authority level granted        =
+        Direct DBADM authority
+        Direct SECADM authority
+        Indirect SYSADM authority
+        Indirect CREATETAB authority
+        Indirect BINDADD authority
+        Indirect CONNECT authority
+        Indirect IMPLICIT_SCHEMA authority
+
+Coordinator member number                  = 0
+Coordinator agent process or thread ID     = 69
+
+Agents associated with the application     = 1
+
+
+Connection request start timestamp         = 11/22/2019 21:41:03.374422
+Connect request completion timestamp       = 11/22/2019 21:41:03.374678
+Application idle time                      = 0
+Inbound communication address              = *LOCAL.db2inst1
+
+Last reset timestamp                       = 11/22/2019 21:41:03.376785
+Agents stolen                              = 0
+Agents waiting on locks                    = 0
+Maximum associated agents                  = 1
+Priority at which application agents work  = 0
+Priority type                              = Dynamic
+Locks held by application                  = 2
+Lock waits since connect                   = 0
+Time application waited on locks (ms)      = 0
+Deadlocks detected                         = 0
+Lock escalations                           = 0
+Exclusive lock escalations                 = 0
+Number of Lock Timeouts since connected    = 0
+Total time UOW waited on locks (ms)        = 0
+
+Total sorts                                = 0
+Total sort time (ms)                       = 0
+Total sort overflows                       = 0
+
+Buffer pool data logical reads             = 209829
+Buffer pool data physical reads            = 7495
+Buffer pool temporary data logical reads   = 0
+Buffer pool temporary data physical reads  = 0
+Buffer pool data writes                    = 0
+Buffer pool index logical reads            = 1213154
+Buffer pool index physical reads           = 0
+Buffer pool temporary index logical reads  = 0
+Buffer pool temporary index physical reads = 0
+Buffer pool index writes                   = 0
+Buffer pool xda logical reads              = 0
+Buffer pool xda physical reads             = 0
+Buffer pool temporary xda logical reads    = 0
+Buffer pool temporary xda physical reads   = 0
+Buffer pool xda writes                     = 0
+Total buffer pool read time (milliseconds) = 3637
+Total buffer pool write time (milliseconds)= 0
+Time waited for prefetch (ms)              = 3260
+Unread prefetch pages                      = 0
+Direct reads                               = 0
+Direct writes                              = 0
+Direct read requests                       = 0
+Direct write requests                      = 0
+Direct reads elapsed time (ms)             = 0
+Direct write elapsed time (ms)             = 0
+
+Number of SQL requests since last commit   = 4
+Commit statements                          = 0
+Rollback statements                        = 0
+Dynamic SQL statements attempted           = 1
+Static SQL statements attempted            = 0
+Failed statement operations                = 0
+Select SQL statements executed             = 1
+Xquery statements executed                 = 0
+Update/Insert/Delete statements executed   = 0
+DDL statements executed                    = 0
+Internal automatic rebinds                 = 0
+Internal rows deleted                      = 0
+Internal rows inserted                     = 0
+Internal rows updated                      = 0
+Internal commits                           = 0
+Internal rollbacks                         = 0
+Internal rollbacks due to deadlock         = 0
+Binds/precompiles attempted                = 0
+Rows deleted                               = 0
+Rows inserted                              = 0
+Rows updated                               = 0
+Rows selected                              = 0
+Rows read                                  = 606577
+Rows written                               = 0
+
+UOW log space used (Bytes)                 = 0
+Previous UOW completion timestamp          = 11/22/2019 21:41:03.374678
+Elapsed time of last completed uow (sec.ms)= 0.000000
+UOW start timestamp                        = 11/22/2019 21:41:03.375929
+UOW stop timestamp                         = 01/01/1970 08:00:00.000000
+UOW completion status                      = 0
+
+Open remote cursors                        = 0
+Open remote cursors with blocking          = 0
+Rejected Block Remote Cursor requests      = 0
+Accepted Block Remote Cursor requests      = 2
+Open local cursors                         = 0
+Open local cursors with blocking           = 0
+Total User CPU Time used by agent (s)      = 1.729830
+Total System CPU Time used by agent (s)    = 0.000000
+Host execution elapsed time                = 8.600540
+
+Package cache lookups                      = 1
+Package cache inserts                      = 1
+Application section lookups                = 2
+Application section inserts                = 1
+Catalog cache lookups                      = 28
+Catalog cache inserts                      = 0
+Catalog cache overflows                    = 0
+Catalog cache heap full                    = 0
+Catalog cache high water mark              = 0
+
+Number of hash joins                       = 0
+Number of hash loops                       = 0
+Number of hash join overflows              = 0
+Number of small hash join overflows        = 0
+
+
+Statement type                             = Dynamic SQL Statement
+Statement                                  = Close
+Section number                             = 4
+Application creator                        = NULLID
+Package name                               = SYSSN400
+Consistency Token                          =
+Package Version ID                         =
+Cursor name                                = SQL_CURSN400C4
+Statement member number                    = 0
+Statement start timestamp                  = 11/22/2019 21:41:03.378939
+Statement stop timestamp                   = 11/22/2019 21:41:11.977507
+Elapsed time of last completed stmt(sec.ms)= 0.000029
+Total Statement user CPU time              = 1.727774
+Total Statement system CPU time            = 0.000000
+SQL compiler cost estimate in timerons     = 232014
+SQL compiler cardinality estimate          = 1
+Degree of parallelism requested            = 1
+Number of agents working on statement      = 1
+Number of subagents created for statement  = 1
+Statement sorts                            = 0
+Total sort time                            = 0
+Sort overflows                             = 0
+Rows read                                  = 606577
+Rows written                               = 0
+Internal rows deleted                      = 0
+Internal rows updated                      = 0
+Internal rows inserted                     = 0
+Rows fetched                               = 0
+Buffer pool data logical reads             = 209829
+Buffer pool data physical reads            = 7495
+Buffer pool temporary data logical reads   = 0
+Buffer pool temporary data physical reads  = 0
+Buffer pool index logical reads            = 1213154
+Buffer pool index physical reads           = 0
+Buffer pool temporary index physical reads = 0
+Buffer pool xda logical reads              = 0
+Buffer pool xda physical reads             = 0
+Buffer pool temporary xda logical reads    = 0
+Buffer pool temporary xda physical reads   = 0
+Blocking cursor                            = YES
+Dynamic SQL statement text:select a.CHAR_COL8,b.VARCHAR_COL25 from ttt a,t1 b,t2 c  where a.VARCHAR_COL25=b.VARCHAR_COL25 and a.VARCHAR_COL26=b.VARCHAR_COL26 and b.VARCHAR_COL27='sadf' and b.VARCHAR_COL28='suiji' and a.char_col10=c.char_col10 with ur /*
+<OPTGUIDELINES>
+        <NLJOIN>
+          <TBSCAN TABLE='a' FIRST='TRUE'/>
+          <IXSCAN TABLE='b' INDEX='T1_IDX4'/>
+        </NLJOIN>
+</OPTGUIDELINES>
+*/
+
+
+
+Agent process/thread ID                    = 69
+
+Memory usage for application:
+
+  Node number                                  = 0
+    Memory Pool Type                           = Other Memory
+       Current size (bytes)                    = 196608
+       High water mark (bytes)                 = 196608
+       Configured size (bytes)                 = 1911857152
+
+
+
+* Summary Table:
+
+Type      Number      Repetitions Total Time (s) Min Time (s)   Max Time (s)   Arithmetic Mean Geometric Mean Row(s) Fetched Row(s) Output
+--------- ----------- ----------- -------------- -------------- -------------- --------------- -------------- -------------- -------------
+Statement           1           1       8.599560       8.599560       8.599560        8.599560       8.599560              0             0
+
+* Total Entries:              1
+* Total Time:                 8.599560 seconds
+* Minimum Time:               8.599560 seconds
+* Maximum Time:               8.599560 seconds
+* Arithmetic Mean Time:       8.599560 seconds
+* Geometric Mean Time:        8.599560 seconds
+---------------------------------------------
+* Timestamp: Fri Nov 22 2019 21:41:11 CST
+
+
+
+
+select a.CHAR_COL8,b.VARCHAR_COL25 from ttt a,t1 b,t2 c  where a.VARCHAR_COL25=b.VARCHAR_COL25 and a.VARCHAR_COL26=b.VARCHAR_COL26 and b.VARCHAR_COL27='sadf' and b.VARCHAR_COL28='suiji' and a.char_col10=c.char_col10 with ur
+/*
+<OPTGUIDELINES>
+  <NLJOIN>
+  	<TBSCAN TABLE='c' FIRST='TRUE'/>
+	  <NLJOIN>
+	    <TBSCAN TABLE='a' FIRST='TRUE'/>
+	    <IXSCAN TABLE='b' INDEX='T1_IDX4'/>
+	  </NLJOIN>
+	</NLJOIN>
+</OPTGUIDELINES>
+*/
+
+
+Access Plan:
+-----------
+        Total Cost:             232017
+        Query Degree:           1
+
+             Rows
+            RETURN
+            (   1)
+             Cost
+              I/O
+              |
+          2.43073e-12
+            NLJOIN
+            (   2)
+            232017
+            197952
+         /----+-----\
+      11710       2.07577e-16
+     TBSCAN         TBSCAN
+     (   3)         (   4)
+     4489.54        227524
+      3863          194088
+       |              |
+      11710       1.20779e-10
+ TABLE: DB2INST1    TEMP
+       T2           (   5)
+       Q1           227524
+                    194088
+                      |
+                  1.20779e-10
+                    NLJOIN
+                    (   6)
+                    227524
+                    194088
+               /------+-------\
+           581853           2.07577e-16
+           TBSCAN             FETCH
+           (   7)             (   8)
+           225522             14.0995
+           194085                2
+             |              /---+----\
+           581853          1          15301
+       TABLE: DB2INST1  IXSCAN   TABLE: DB2INST1
+             TTT        (   9)         T1
+             Q3         7.05268        Q2
+                           1
+                          |
+                         15301
+                    INDEX: DB2INST1
+                        T1_IDX4
+                          Q2
+
+
+            Monitoring Information
+
+Instance name                                  = db2inst1
+Node name                                      =
+Node type                                      = Enterprise Server Edition with local and remote clients
+Snapshot timestamp                             = 11/22/2019 21:37:22.752211
+
+
+            Application Snapshot
+
+
+Application handle                         = 4659
+Application status                         = UOW Waiting
+Status change time                         = 11/22/2019 21:37:22.745049
+Application code page                      = 1386
+Application country/region code            = 1
+DUOW correlation token                     = *LOCAL.db2inst1.191122133714
+Application name                           = db2batch
+Application ID                             = *LOCAL.db2inst1.191122133714
+Sequence number                            = 00001
+TP Monitor client user ID                  =
+TP Monitor client workstation name         = t-test-db02
+TP Monitor client application name         = DB2BATCH
+TP Monitor client accounting string        =
+
+CONNECT Authorization ID                   = DB2INST1
+Client login ID                            = db2inst1
+Configuration NNAME of client              = t-test-db02
+Client database manager product ID         = SQL10055
+Process ID of client application           = 54126
+Platform of client application             = LINUXAMD64
+Communication protocol of client           = Local Client
+
+Database name                              = SAMPLE
+Database path                              = /home/db2inst1/db2inst1/NODE0000/SQL00001/MEMBER0000/
+Client database alias                      = SAMPLE
+Input database alias                       =
+The highest authority level granted        =
+        Direct DBADM authority
+        Direct SECADM authority
+        Indirect SYSADM authority
+        Indirect CREATETAB authority
+        Indirect BINDADD authority
+        Indirect CONNECT authority
+        Indirect IMPLICIT_SCHEMA authority
+
+Coordinator member number                  = 0
+Coordinator agent process or thread ID     = 102
+
+Agents associated with the application     = 1
+
+
+Connection request start timestamp         = 11/22/2019 21:37:14.640961
+Connect request completion timestamp       = 11/22/2019 21:37:14.641396
+Application idle time                      = 0
+Inbound communication address              = *LOCAL.db2inst1
+
+Last reset timestamp                       = 11/22/2019 21:37:14.644123
+Agents stolen                              = 0
+Agents waiting on locks                    = 0
+Maximum associated agents                  = 1
+Priority at which application agents work  = 0
+Priority type                              = Dynamic
+Locks held by application                  = 2
+Lock waits since connect                   = 0
+Time application waited on locks (ms)      = 0
+Deadlocks detected                         = 0
+Lock escalations                           = 0
+Exclusive lock escalations                 = 0
+Number of Lock Timeouts since connected    = 0
+Total time UOW waited on locks (ms)        = 0
+
+Total sorts                                = 0
+Total sort time (ms)                       = 0
+Total sort overflows                       = 0
+
+Buffer pool data logical reads             = 219090
+Buffer pool data physical reads            = 7459
+Buffer pool temporary data logical reads   = 27877
+Buffer pool temporary data physical reads  = 0
+Buffer pool data writes                    = 0
+Buffer pool index logical reads            = 1213154
+Buffer pool index physical reads           = 0
+Buffer pool temporary index logical reads  = 0
+Buffer pool temporary index physical reads = 0
+Buffer pool index writes                   = 0
+Buffer pool xda logical reads              = 0
+Buffer pool xda physical reads             = 0
+Buffer pool temporary xda logical reads    = 0
+Buffer pool temporary xda physical reads   = 0
+Buffer pool xda writes                     = 0
+Total buffer pool read time (milliseconds) = 3276
+Total buffer pool write time (milliseconds)= 0
+Time waited for prefetch (ms)              = 3011
+Unread prefetch pages                      = 0
+Direct reads                               = 0
+Direct writes                              = 0
+Direct read requests                       = 0
+Direct write requests                      = 0
+Direct reads elapsed time (ms)             = 0
+Direct write elapsed time (ms)             = 0
+
+Number of SQL requests since last commit   = 4
+Commit statements                          = 0
+Rollback statements                        = 0
+Dynamic SQL statements attempted           = 1
+Static SQL statements attempted            = 0
+Failed statement operations                = 0
+Select SQL statements executed             = 1
+Xquery statements executed                 = 0
+Update/Insert/Delete statements executed   = 0
+DDL statements executed                    = 0
+Internal automatic rebinds                 = 0
+Internal rows deleted                      = 0
+Internal rows inserted                     = 0
+Internal rows updated                      = 0
+Internal commits                           = 0
+Internal rollbacks                         = 0
+Internal rollbacks due to deadlock         = 0
+Binds/precompiles attempted                = 0
+Rows deleted                               = 0
+Rows inserted                              = 0
+Rows updated                               = 0
+Rows selected                              = 0
+Rows read                                  = 634453
+Rows written                               = 0
+
+UOW log space used (Bytes)                 = 0
+Previous UOW completion timestamp          = 11/22/2019 21:37:14.641396
+Elapsed time of last completed uow (sec.ms)= 0.000000
+UOW start timestamp                        = 11/22/2019 21:37:14.642947
+UOW stop timestamp                         = 01/01/1970 08:00:00.000000
+UOW completion status                      = 0
+
+Open remote cursors                        = 0
+Open remote cursors with blocking          = 0
+Rejected Block Remote Cursor requests      = 0
+Accepted Block Remote Cursor requests      = 2
+Open local cursors                         = 0
+Open local cursors with blocking           = 0
+Total User CPU Time used by agent (s)      = 1.561150
+Total System CPU Time used by agent (s)    = 0.000000
+Host execution elapsed time                = 8.100532
+
+Package cache lookups                      = 1
+Package cache inserts                      = 1
+Application section lookups                = 2
+Application section inserts                = 1
+Catalog cache lookups                      = 28
+Catalog cache inserts                      = 0
+Catalog cache overflows                    = 0
+Catalog cache heap full                    = 0
+Catalog cache high water mark              = 0
+
+Number of hash joins                       = 0
+Number of hash loops                       = 0
+Number of hash join overflows              = 0
+Number of small hash join overflows        = 0
+
+
+Statement type                             = Dynamic SQL Statement
+Statement                                  = Close
+Section number                             = 4
+Application creator                        = NULLID
+Package name                               = SYSSN400
+Consistency Token                          =
+Package Version ID                         =
+Cursor name                                = SQL_CURSN400C4
+Statement member number                    = 0
+Statement start timestamp                  = 11/22/2019 21:37:14.646805
+Statement stop timestamp                   = 11/22/2019 21:37:22.745046
+Elapsed time of last completed stmt(sec.ms)= 0.000040
+Total Statement user CPU time              = 1.558698
+Total Statement system CPU time            = 0.000000
+SQL compiler cost estimate in timerons     = 232017
+SQL compiler cardinality estimate          = 1
+Degree of parallelism requested            = 1
+Number of agents working on statement      = 1
+Number of subagents created for statement  = 1
+Statement sorts                            = 0
+Total sort time                            = 0
+Sort overflows                             = 0
+Rows read                                  = 634453
+Rows written                               = 0
+Internal rows deleted                      = 0
+Internal rows updated                      = 0
+Internal rows inserted                     = 0
+Rows fetched                               = 0
+Buffer pool data logical reads             = 219090
+Buffer pool data physical reads            = 7459
+Buffer pool temporary data logical reads   = 27877
+Buffer pool temporary data physical reads  = 0
+Buffer pool index logical reads            = 1213154
+Buffer pool index physical reads           = 0
+Buffer pool temporary index physical reads = 0
+Buffer pool xda logical reads              = 0
+Buffer pool xda physical reads             = 0
+Buffer pool temporary xda logical reads    = 0
+Buffer pool temporary xda physical reads   = 0
+Blocking cursor                            = YES
+Dynamic SQL statement text:select a.CHAR_COL8,b.VARCHAR_COL25 from ttt a,t1 b,t2 c  where a.VARCHAR_COL25=b.VARCHAR_COL25 and a.VARCHAR_COL26=b.VARCHAR_COL26 and b.VARCHAR_COL27='sadf' and b.VARCHAR_COL28='suiji' and a.char_col10=c.char_col10 with ur /*
+<OPTGUIDELINES>
+  <NLJOIN>
+        <TBSCAN TABLE='c' FIRST='TRUE'/>
+          <NLJOIN>
+            <TBSCAN TABLE='a' FIRST='TRUE'/>
+            <IXSCAN TABLE='b' INDEX='T1_IDX4'/>
+          </NLJOIN>
+        </NLJOIN>
+</OPTGUIDELINES>
+*/
+
+
+
+Agent process/thread ID                    = 102
+
+Memory usage for application:
+
+  Node number                                  = 0
+    Memory Pool Type                           = Other Memory
+       Current size (bytes)                    = 196608
+       High water mark (bytes)                 = 196608
+       Configured size (bytes)                 = 1911857152
+
+
+
+* Summary Table:
+
+Type      Number      Repetitions Total Time (s) Min Time (s)   Max Time (s)   Arithmetic Mean Geometric Mean Row(s) Fetched Row(s) Output
+--------- ----------- ----------- -------------- -------------- -------------- --------------- -------------- -------------- -------------
+Statement           1           1       8.101704       8.101704       8.101704        8.101704       8.101704              0             0
+
+* Total Entries:              1
+* Total Time:                 8.101704 seconds
+* Minimum Time:               8.101704 seconds
+* Maximum Time:               8.101704 seconds
+* Arithmetic Mean Time:       8.101704 seconds
+* Geometric Mean Time:        8.101704 seconds
+---------------------------------------------
+* Timestamp: Fri Nov 22 2019 21:37:22 CST
+
+
+
+select a.CHAR_COL8,b.VARCHAR_COL25 from ttt a,t1 b,t2 c  where a.VARCHAR_COL25=b.VARCHAR_COL25 and a.VARCHAR_COL26=b.VARCHAR_COL26 and b.VARCHAR_COL27='sadf' and b.VARCHAR_COL28='suiji' and a.char_col10=c.char_col10 with ur
+/*
+<OPTGUIDELINES>
+  <HSJOIN>
+  	<TBSCAN TABLE='c' FIRST='TRUE'/>
+	  <NLJOIN>
+	    <TBSCAN TABLE='a' FIRST='TRUE'/>
+	    <IXSCAN TABLE='b' INDEX='T1_IDX4'/>
+	  </NLJOIN>
+	</HSJOIN>
+</OPTGUIDELINES>
+*/
+
+        Total Cost:             232015
+        Query Degree:           1
+
+                 Rows
+                RETURN
+                (   1)
+                 Cost
+                  I/O
+                  |
+              2.43073e-12
+                HSJOIN
+                (   2)
+                232015
+                197951
+         /--------+--------\
+      11710              1.20779e-10
+     TBSCAN                NLJOIN
+     (   3)                (   4)
+     4489.54               227524
+      3863                 194088
+       |              /------+-------\
+      11710       581853           2.07577e-16
+ TABLE: DB2INST1  TBSCAN             FETCH
+       T2         (   5)             (   6)
+       Q1         225522             14.0995
+                  194085                2
+                    |              /---+----\
+                  581853          1          15301
+              TABLE: DB2INST1  IXSCAN   TABLE: DB2INST1
+                    TTT        (   7)         T1
+                    Q3         7.05268        Q2
+                                  1
+                                 |
+                                15301
+                           INDEX: DB2INST1
+                               T1_IDX4
+                                 Q2
+            Monitoring Information
+
+Instance name                                  = db2inst1
+Node name                                      =
+Node type                                      = Enterprise Server Edition with local and remote clients
+Snapshot timestamp                             = 11/22/2019 21:35:45.260888
+
+
+            Application Snapshot
+
+
+Application handle                         = 4657
+Application status                         = UOW Waiting
+Status change time                         = 11/22/2019 21:35:45.259134
+Application code page                      = 1386
+Application country/region code            = 1
+DUOW correlation token                     = *LOCAL.db2inst1.191122133537
+Application name                           = db2batch
+Application ID                             = *LOCAL.db2inst1.191122133537
+Sequence number                            = 00001
+TP Monitor client user ID                  =
+TP Monitor client workstation name         = t-test-db02
+TP Monitor client application name         = DB2BATCH
+TP Monitor client accounting string        =
+
+CONNECT Authorization ID                   = DB2INST1
+Client login ID                            = db2inst1
+Configuration NNAME of client              = t-test-db02
+Client database manager product ID         = SQL10055
+Process ID of client application           = 48544
+Platform of client application             = LINUXAMD64
+Communication protocol of client           = Local Client
+
+Database name                              = SAMPLE
+Database path                              = /home/db2inst1/db2inst1/NODE0000/SQL00001/MEMBER0000/
+Client database alias                      = SAMPLE
+Input database alias                       =
+The highest authority level granted        =
+        Direct DBADM authority
+        Direct SECADM authority
+        Indirect SYSADM authority
+        Indirect CREATETAB authority
+        Indirect BINDADD authority
+        Indirect CONNECT authority
+        Indirect IMPLICIT_SCHEMA authority
+
+Coordinator member number                  = 0
+Coordinator agent process or thread ID     = 69
+
+Agents associated with the application     = 1
+
+
+Connection request start timestamp         = 11/22/2019 21:35:37.407335
+Connect request completion timestamp       = 11/22/2019 21:35:37.407619
+Application idle time                      = 0
+Inbound communication address              = *LOCAL.db2inst1
+
+Last reset timestamp                       = 11/22/2019 21:35:37.409885
+Agents stolen                              = 0
+Agents waiting on locks                    = 0
+Maximum associated agents                  = 1
+Priority at which application agents work  = 0
+Priority type                              = Dynamic
+Locks held by application                  = 2
+Lock waits since connect                   = 0
+Time application waited on locks (ms)      = 0
+Deadlocks detected                         = 0
+Lock escalations                           = 0
+Exclusive lock escalations                 = 0
+Number of Lock Timeouts since connected    = 0
+Total time UOW waited on locks (ms)        = 0
+
+Total sorts                                = 0
+Total sort time (ms)                       = 0
+Total sort overflows                       = 0
+
+Buffer pool data logical reads             = 209654
+Buffer pool data physical reads            = 7320
+Buffer pool temporary data logical reads   = 0
+Buffer pool temporary data physical reads  = 0
+Buffer pool data writes                    = 0
+Buffer pool index logical reads            = 1213154
+Buffer pool index physical reads           = 0
+Buffer pool temporary index logical reads  = 0
+Buffer pool temporary index physical reads = 0
+Buffer pool index writes                   = 0
+Buffer pool xda logical reads              = 0
+Buffer pool xda physical reads             = 0
+Buffer pool temporary xda logical reads    = 0
+Buffer pool temporary xda physical reads   = 0
+Buffer pool xda writes                     = 0
+Total buffer pool read time (milliseconds) = 3103
+Total buffer pool write time (milliseconds)= 0
+Time waited for prefetch (ms)              = 2786
+Unread prefetch pages                      = 0
+Direct reads                               = 0
+Direct writes                              = 0
+Direct read requests                       = 0
+Direct write requests                      = 0
+Direct reads elapsed time (ms)             = 0
+Direct write elapsed time (ms)             = 0
+
+Number of SQL requests since last commit   = 4
+Commit statements                          = 0
+Rollback statements                        = 0
+Dynamic SQL statements attempted           = 1
+Static SQL statements attempted            = 0
+Failed statement operations                = 0
+Select SQL statements executed             = 1
+Xquery statements executed                 = 0
+Update/Insert/Delete statements executed   = 0
+DDL statements executed                    = 0
+Internal automatic rebinds                 = 0
+Internal rows deleted                      = 0
+Internal rows inserted                     = 0
+Internal rows updated                      = 0
+Internal commits                           = 0
+Internal rollbacks                         = 0
+Internal rollbacks due to deadlock         = 0
+Binds/precompiles attempted                = 0
+Rows deleted                               = 0
+Rows inserted                              = 0
+Rows updated                               = 0
+Rows selected                              = 0
+Rows read                                  = 606577
+Rows written                               = 0
+
+UOW log space used (Bytes)                 = 0
+Previous UOW completion timestamp          = 11/22/2019 21:35:37.407619
+Elapsed time of last completed uow (sec.ms)= 0.000000
+UOW start timestamp                        = 11/22/2019 21:35:37.408944
+UOW stop timestamp                         = 01/01/1970 08:00:00.000000
+UOW completion status                      = 0
+
+Open remote cursors                        = 0
+Open remote cursors with blocking          = 0
+Rejected Block Remote Cursor requests      = 0
+Accepted Block Remote Cursor requests      = 2
+Open local cursors                         = 0
+Open local cursors with blocking           = 0
+Total User CPU Time used by agent (s)      = 1.492978
+Total System CPU Time used by agent (s)    = 0.000000
+Host execution elapsed time                = 7.848733
+
+Package cache lookups                      = 1
+Package cache inserts                      = 1
+Application section lookups                = 2
+Application section inserts                = 1
+Catalog cache lookups                      = 28
+Catalog cache inserts                      = 0
+Catalog cache overflows                    = 0
+Catalog cache heap full                    = 0
+Catalog cache high water mark              = 0
+
+Number of hash joins                       = 1
+Number of hash loops                       = 0
+Number of hash join overflows              = 0
+Number of small hash join overflows        = 0
+
+
+Statement type                             = Dynamic SQL Statement
+Statement                                  = Close
+Section number                             = 4
+Application creator                        = NULLID
+Package name                               = SYSSN400
+Consistency Token                          =
+Package Version ID                         =
+Cursor name                                = SQL_CURSN400C4
+Statement member number                    = 0
+Statement start timestamp                  = 11/22/2019 21:35:37.412958
+Statement stop timestamp                   = 11/22/2019 21:35:45.259131
+Elapsed time of last completed stmt(sec.ms)= 0.000031
+Total Statement user CPU time              = 1.490257
+Total Statement system CPU time            = 0.000000
+SQL compiler cost estimate in timerons     = 232015
+SQL compiler cardinality estimate          = 1
+Degree of parallelism requested            = 1
+Number of agents working on statement      = 1
+Number of subagents created for statement  = 1
+Statement sorts                            = 0
+Total sort time                            = 0
+Sort overflows                             = 0
+Rows read                                  = 606577
+Rows written                               = 0
+Internal rows deleted                      = 0
+Internal rows updated                      = 0
+Internal rows inserted                     = 0
+Rows fetched                               = 0
+Buffer pool data logical reads             = 209654
+Buffer pool data physical reads            = 7320
+Buffer pool temporary data logical reads   = 0
+Buffer pool temporary data physical reads  = 0
+Buffer pool index logical reads            = 1213154
+Buffer pool index physical reads           = 0
+Buffer pool temporary index physical reads = 0
+Buffer pool xda logical reads              = 0
+Buffer pool xda physical reads             = 0
+Buffer pool temporary xda logical reads    = 0
+Buffer pool temporary xda physical reads   = 0
+Blocking cursor                            = YES
+Dynamic SQL statement text:select a.CHAR_COL8,b.VARCHAR_COL25 from ttt a,t1 b,t2 c  where a.VARCHAR_COL25=b.VARCHAR_COL25 and a.VARCHAR_COL26=b.VARCHAR_COL26 and b.VARCHAR_COL27='sadf' and b.VARCHAR_COL28='suiji' and a.char_col10=c.char_col10 with ur /*
+<OPTGUIDELINES>
+  <HSJOIN>
+        <TBSCAN TABLE='c' FIRST='TRUE'/>
+          <NLJOIN>
+            <TBSCAN TABLE='a' FIRST='TRUE'/>
+            <IXSCAN TABLE='b' INDEX='T1_IDX4'/>
+          </NLJOIN>
+        </HSJOIN>
+</OPTGUIDELINES>
+*/
+
+
+
+Agent process/thread ID                    = 69
+
+Memory usage for application:
+
+  Node number                                  = 0
+    Memory Pool Type                           = Other Memory
+       Current size (bytes)                    = 196608
+       High water mark (bytes)                 = 196608
+       Configured size (bytes)                 = 1911857152
+
+
+
+* Summary Table:
+
+Type      Number      Repetitions Total Time (s) Min Time (s)   Max Time (s)   Arithmetic Mean Geometric Mean Row(s) Fetched Row(s) Output
+--------- ----------- ----------- -------------- -------------- -------------- --------------- -------------- -------------- -------------
+Statement           1           1       7.847559       7.847559       7.847559        7.847559       7.847559              0             0
+
+* Total Entries:              1
+* Total Time:                 7.847559 seconds
+* Minimum Time:               7.847559 seconds
+* Maximum Time:               7.847559 seconds
+* Arithmetic Mean Time:       7.847559 seconds
+* Geometric Mean Time:        7.847559 seconds
+---------------------------------------------
+* Timestamp: Fri Nov 22 2019 21:35:45 CST
+
+
+
+
+
+
+select a.CHAR_COL8,b.VARCHAR_COL25 from ttt a,t1 b,t2 c  where a.VARCHAR_COL25=b.VARCHAR_COL25 and a.VARCHAR_COL26=b.VARCHAR_COL26 and b.VARCHAR_COL27='sadf' and b.VARCHAR_COL28='suiji' and a.char_col10=c.char_col10 with ur
+/*
+<OPTGUIDELINES>
+  <HSJOIN>
+	  <NLJOIN>
+	    <TBSCAN TABLE='a' FIRST='TRUE'/>
+	    <IXSCAN TABLE='b' INDEX='T1_IDX4'/>
+	  </NLJOIN>
+	  <TBSCAN TABLE='c'/>
+	</HSJOIN>
+</OPTGUIDELINES>
+*/
+Access Plan:
+-----------
+        Total Cost:             232748
+        Query Degree:           1
+
+                           Rows
+                          RETURN
+                          (   1)
+                           Cost
+                            I/O
+                            |
+                        2.43072e-12
+                          HSJOIN
+                          (   2)
+                          232748
+                          198055
+                  /---------+----------\
+            1.20779e-10                 11710
+              NLJOIN                   TBSCAN
+              (   3)                   (   7)
+              227524                   4489.54
+              194088                    3863
+         /------+-------\                |
+     581853           2.07577e-16       11710
+     TBSCAN             FETCH      TABLE: DB2INST1
+     (   4)             (   5)           T2
+     225522             14.0995          Q1
+     194085                2
+       |              /---+----\
+     581853          1          15301
+ TABLE: DB2INST1  IXSCAN   TABLE: DB2INST1
+       TTT        (   6)         T1
+       Q3         7.05268        Q2
+                     1
+                    |
+                   15301
+              INDEX: DB2INST1
+                  T1_IDX4
+                    Q2
+
+
+            Monitoring Information
+
+Instance name                                  = db2inst1
+Node name                                      =
+Node type                                      = Enterprise Server Edition with local and remote clients
+Snapshot timestamp                             = 11/22/2019 21:33:42.833356
+
+
+            Application Snapshot
+
+
+Application handle                         = 4655
+Application status                         = UOW Waiting
+Status change time                         = 11/22/2019 21:33:42.832443
+Application code page                      = 1386
+Application country/region code            = 1
+DUOW correlation token                     = *LOCAL.db2inst1.191122133334
+Application name                           = db2batch
+Application ID                             = *LOCAL.db2inst1.191122133334
+Sequence number                            = 00001
+TP Monitor client user ID                  =
+TP Monitor client workstation name         = t-test-db02
+TP Monitor client application name         = DB2BATCH
+TP Monitor client accounting string        =
+
+CONNECT Authorization ID                   = DB2INST1
+Client login ID                            = db2inst1
+Configuration NNAME of client              = t-test-db02
+Client database manager product ID         = SQL10055
+Process ID of client application           = 41461
+Platform of client application             = LINUXAMD64
+Communication protocol of client           = Local Client
+
+Database name                              = SAMPLE
+Database path                              = /home/db2inst1/db2inst1/NODE0000/SQL00001/MEMBER0000/
+Client database alias                      = SAMPLE
+Input database alias                       =
+The highest authority level granted        =
+        Direct DBADM authority
+        Direct SECADM authority
+        Indirect SYSADM authority
+        Indirect CREATETAB authority
+        Indirect BINDADD authority
+        Indirect CONNECT authority
+        Indirect IMPLICIT_SCHEMA authority
+
+Coordinator member number                  = 0
+Coordinator agent process or thread ID     = 102
+
+Agents associated with the application     = 1
+
+
+Connection request start timestamp         = 11/22/2019 21:33:34.944872
+Connect request completion timestamp       = 11/22/2019 21:33:34.945226
+Application idle time                      = 0
+Inbound communication address              = *LOCAL.db2inst1
+
+Last reset timestamp                       = 11/22/2019 21:33:34.977151
+Agents stolen                              = 0
+Agents waiting on locks                    = 0
+Maximum associated agents                  = 1
+Priority at which application agents work  = 0
+Priority type                              = Dynamic
+Locks held by application                  = 2
+Lock waits since connect                   = 0
+Time application waited on locks (ms)      = 0
+Deadlocks detected                         = 0
+Lock escalations                           = 0
+Exclusive lock escalations                 = 0
+Number of Lock Timeouts since connected    = 0
+Total time UOW waited on locks (ms)        = 0
+
+Total sorts                                = 0
+Total sort time (ms)                       = 0
+Total sort overflows                       = 0
+
+Buffer pool data logical reads             = 219185
+Buffer pool data physical reads            = 7551
+Buffer pool temporary data logical reads   = 271
+Buffer pool temporary data physical reads  = 21
+Buffer pool data writes                    = 0
+Buffer pool index logical reads            = 1213156
+Buffer pool index physical reads           = 0
+Buffer pool temporary index logical reads  = 0
+Buffer pool temporary index physical reads = 0
+Buffer pool index writes                   = 0
+Buffer pool xda logical reads              = 0
+Buffer pool xda physical reads             = 0
+Buffer pool temporary xda logical reads    = 0
+Buffer pool temporary xda physical reads   = 0
+Buffer pool xda writes                     = 0
+Total buffer pool read time (milliseconds) = 3166
+Total buffer pool write time (milliseconds)= 0
+Time waited for prefetch (ms)              = 2737
+Unread prefetch pages                      = 0
+Direct reads                               = 8
+Direct writes                              = 0
+Direct read requests                       = 1
+Direct write requests                      = 0
+Direct reads elapsed time (ms)             = 0
+Direct write elapsed time (ms)             = 0
+
+Number of SQL requests since last commit   = 4
+Commit statements                          = 0
+Rollback statements                        = 0
+Dynamic SQL statements attempted           = 1
+Static SQL statements attempted            = 0
+Failed statement operations                = 0
+Select SQL statements executed             = 1
+Xquery statements executed                 = 0
+Update/Insert/Delete statements executed   = 0
+DDL statements executed                    = 0
+Internal automatic rebinds                 = 0
+Internal rows deleted                      = 0
+Internal rows inserted                     = 0
+Internal rows updated                      = 0
+Internal commits                           = 0
+Internal rollbacks                         = 0
+Internal rollbacks due to deadlock         = 0
+Binds/precompiles attempted                = 0
+Rows deleted                               = 0
+Rows inserted                              = 0
+Rows updated                               = 0
+Rows selected                              = 0
+Rows read                                  = 634691
+Rows written                               = 262
+
+UOW log space used (Bytes)                 = 0
+Previous UOW completion timestamp          = 11/22/2019 21:33:34.945226
+Elapsed time of last completed uow (sec.ms)= 0.000000
+UOW start timestamp                        = 11/22/2019 21:33:34.946644
+UOW stop timestamp                         = 01/01/1970 08:00:00.000000
+UOW completion status                      = 0
+
+Open remote cursors                        = 0
+Open remote cursors with blocking          = 0
+Rejected Block Remote Cursor requests      = 0
+Accepted Block Remote Cursor requests      = 2
+Open local cursors                         = 0
+Open local cursors with blocking           = 0
+Total User CPU Time used by agent (s)      = 1.531586
+Total System CPU Time used by agent (s)    = 0.000000
+Host execution elapsed time                = 7.854732
+
+Package cache lookups                      = 1
+Package cache inserts                      = 1
+Application section lookups                = 2
+Application section inserts                = 1
+Catalog cache lookups                      = 28
+Catalog cache inserts                      = 0
+Catalog cache overflows                    = 0
+Catalog cache heap full                    = 0
+Catalog cache high water mark              = 0
+
+Number of hash joins                       = 1
+Number of hash loops                       = 0
+Number of hash join overflows              = 1
+Number of small hash join overflows        = 0
+
+
+Statement type                             = Dynamic SQL Statement
+Statement                                  = Close
+Section number                             = 4
+Application creator                        = NULLID
+Package name                               = SYSSN400
+Consistency Token                          =
+Package Version ID                         =
+Cursor name                                = SQL_CURSN400C4
+Statement member number                    = 0
+Statement start timestamp                  = 11/22/2019 21:33:34.980639
+Statement stop timestamp                   = 11/22/2019 21:33:42.832440
+Elapsed time of last completed stmt(sec.ms)= 0.000030
+Total Statement user CPU time              = 1.528712
+Total Statement system CPU time            = 0.000000
+SQL compiler cost estimate in timerons     = 232748
+SQL compiler cardinality estimate          = 1
+Degree of parallelism requested            = 1
+Number of agents working on statement      = 1
+Number of subagents created for statement  = 1
+Statement sorts                            = 0
+Total sort time                            = 0
+Sort overflows                             = 0
+Rows read                                  = 634690
+Rows written                               = 262
+Internal rows deleted                      = 0
+Internal rows updated                      = 0
+Internal rows inserted                     = 0
+Rows fetched                               = 0
+Buffer pool data logical reads             = 219182
+Buffer pool data physical reads            = 7550
+Buffer pool temporary data logical reads   = 271
+Buffer pool temporary data physical reads  = 21
+Buffer pool index logical reads            = 1213154
+Buffer pool index physical reads           = 0
+Buffer pool temporary index physical reads = 0
+Buffer pool xda logical reads              = 0
+Buffer pool xda physical reads             = 0
+Buffer pool temporary xda logical reads    = 0
+Buffer pool temporary xda physical reads   = 0
+Blocking cursor                            = YES
+Dynamic SQL statement text:select a.CHAR_COL8,b.VARCHAR_COL25 from ttt a,t1 b,t2 c  where a.VARCHAR_COL25=b.VARCHAR_COL25 and a.VARCHAR_COL26=b.VARCHAR_COL26 and b.VARCHAR_COL27='sadf' and b.VARCHAR_COL28='suiji' and a.char_col10=c.char_col10 with ur /*
+<OPTGUIDELINES>
+  <HSJOIN>
+          <NLJOIN>
+            <TBSCAN TABLE='a' FIRST='TRUE'/>
+            <IXSCAN TABLE='b' INDEX='T1_IDX4'/>
+          </NLJOIN>
+          <TBSCAN TABLE='c'/>
+        </HSJOIN>
+</OPTGUIDELINES>
+*/
+
+
+
+Agent process/thread ID                    = 102
+
+Memory usage for application:
+
+  Node number                                  = 0
+    Memory Pool Type                           = Other Memory
+       Current size (bytes)                    = 262144
+       High water mark (bytes)                 = 262144
+       Configured size (bytes)                 = 1911857152
+
+
+
+* Summary Table:
+
+Type      Number      Repetitions Total Time (s) Min Time (s)   Max Time (s)   Arithmetic Mean Geometric Mean Row(s) Fetched Row(s) Output
+--------- ----------- ----------- -------------- -------------- -------------- --------------- -------------- -------------- -------------
+Statement           1           1       7.852312       7.852312       7.852312        7.852312       7.852312              0             0
+
+* Total Entries:              1
+* Total Time:                 7.852312 seconds
+* Minimum Time:               7.852312 seconds
+* Maximum Time:               7.852312 seconds
+* Arithmetic Mean Time:       7.852312 seconds
+* Geometric Mean Time:        7.852312 seconds
+---------------------------------------------
+* Timestamp: Fri Nov 22 2019 21:33:42 CST
+
+
+select a.CHAR_COL8,b.VARCHAR_COL25 from ttt a,t1 b,t2 c  where a.VARCHAR_COL25=b.VARCHAR_COL25 and a.VARCHAR_COL26=b.VARCHAR_COL26 and b.VARCHAR_COL27='sadf' and b.VARCHAR_COL28='suiji' and a.char_col10=c.char_col10 with ur
+/*
+<OPTGUIDELINES>
+  <MSJOIN>
+	  <NLJOIN>
+	    <TBSCAN TABLE='a' FIRST='TRUE'/>
+	    <IXSCAN TABLE='b' INDEX='T1_IDX4'/>
+	  </NLJOIN>
+	  <TBSCAN TABLE='c'/>
+	</MSJOIN>
+</OPTGUIDELINES>
+*/
+
+Access Plan:
+-----------
+        Total Cost:             232278
+        Query Degree:           1
+
+                                Rows
+                               RETURN
+                               (   1)
+                                Cost
+                                 I/O
+                                 |
+                             2.43072e-12
+                               MSJOIN
+                               (   2)
+                               232278
+                               198014
+                  /--------------+--------------\
+            1.20779e-10                        0.0201254
+              TBSCAN                            FILTER
+              (   3)                            (   9)
+              227524                            4754.04
+              194088                             3926
+                |                                 |
+            1.20779e-10                          11710
+              SORT                              TBSCAN
+              (   4)                            (  10)
+              227524                            4754.04
+              194088                             3926
+                |                                 |
+            1.20779e-10                          11710
+              NLJOIN                            SORT
+              (   5)                            (  11)
+              227524                            4714.13
+              194088                            3894.5
+         /------+-------\                         |
+     581853           2.07577e-16                11710
+     TBSCAN             FETCH                   TBSCAN
+     (   6)             (   7)                  (  12)
+     225522             14.0995                 4489.54
+     194085                2                     3863
+       |              /---+----\                  |
+     581853          1          15301            11710
+ TABLE: DB2INST1  IXSCAN   TABLE: DB2INST1  TABLE: DB2INST1
+       TTT        (   8)         T1               T2
+       Q3         7.05268        Q2               Q1
+                     1
+                    |
+                   15301
+              INDEX: DB2INST1
+                  T1_IDX4
+                    Q2
+
+            Application Snapshot
+
+
+Application handle                         = 4681
+Application status                         = UOW Waiting
+Status change time                         = 11/22/2019 21:54:07.640742
+Application code page                      = 1386
+Application country/region code            = 1
+DUOW correlation token                     = *LOCAL.db2inst1.191122135359
+Application name                           = db2batch
+Application ID                             = *LOCAL.db2inst1.191122135359
+Sequence number                            = 00001
+TP Monitor client user ID                  =
+TP Monitor client workstation name         = t-test-db02
+TP Monitor client application name         = DB2BATCH
+TP Monitor client accounting string        =
+
+CONNECT Authorization ID                   = DB2INST1
+Client login ID                            = db2inst1
+Configuration NNAME of client              = t-test-db02
+Client database manager product ID         = SQL10055
+Process ID of client application           = 112717
+Platform of client application             = LINUXAMD64
+Communication protocol of client           = Local Client
+
+Database name                              = SAMPLE
+Database path                              = /home/db2inst1/db2inst1/NODE0000/SQL00001/MEMBER0000/
+Client database alias                      = SAMPLE
+Input database alias                       =
+The highest authority level granted        =
+        Direct DBADM authority
+        Direct SECADM authority
+        Indirect SYSADM authority
+        Indirect CREATETAB authority
+        Indirect BINDADD authority
+        Indirect CONNECT authority
+        Indirect IMPLICIT_SCHEMA authority
+
+Coordinator member number                  = 0
+Coordinator agent process or thread ID     = 102
+
+Agents associated with the application     = 1
+
+
+Connection request start timestamp         = 11/22/2019 21:53:59.824917
+Connect request completion timestamp       = 11/22/2019 21:53:59.825202
+Application idle time                      = 0
+Inbound communication address              = *LOCAL.db2inst1
+
+Last reset timestamp                       = 11/22/2019 21:53:59.828307
+Agents stolen                              = 0
+Agents waiting on locks                    = 0
+Maximum associated agents                  = 1
+Priority at which application agents work  = 0
+Priority type                              = Dynamic
+Locks held by application                  = 2
+Lock waits since connect                   = 0
+Time application waited on locks (ms)      = 0
+Deadlocks detected                         = 0
+Lock escalations                           = 0
+Exclusive lock escalations                 = 0
+Number of Lock Timeouts since connected    = 0
+Total time UOW waited on locks (ms)        = 0
+
+Total sorts                                = 1
+Total sort time (ms)                       = 0
+Total sort overflows                       = 0
+
+Buffer pool data logical reads             = 209364
+Buffer pool data physical reads            = 7030
+Buffer pool temporary data logical reads   = 0
+Buffer pool temporary data physical reads  = 0
+Buffer pool data writes                    = 0
+Buffer pool index logical reads            = 1213156
+Buffer pool index physical reads           = 3
+Buffer pool temporary index logical reads  = 0
+Buffer pool temporary index physical reads = 0
+Buffer pool index writes                   = 0
+Buffer pool xda logical reads              = 0
+Buffer pool xda physical reads             = 0
+Buffer pool temporary xda logical reads    = 0
+Buffer pool temporary xda physical reads   = 0
+Buffer pool xda writes                     = 0
+Total buffer pool read time (milliseconds) = 3122
+Total buffer pool write time (milliseconds)= 0
+Time waited for prefetch (ms)              = 2883
+Unread prefetch pages                      = 0
+Direct reads                               = 0
+Direct writes                              = 0
+Direct read requests                       = 0
+Direct write requests                      = 0
+Direct reads elapsed time (ms)             = 0
+Direct write elapsed time (ms)             = 0
+
+Number of SQL requests since last commit   = 4
+Commit statements                          = 0
+Rollback statements                        = 0
+Dynamic SQL statements attempted           = 1
+Static SQL statements attempted            = 0
+Failed statement operations                = 0
+Select SQL statements executed             = 1
+Xquery statements executed                 = 0
+Update/Insert/Delete statements executed   = 0
+DDL statements executed                    = 0
+Internal automatic rebinds                 = 0
+Internal rows deleted                      = 0
+Internal rows inserted                     = 0
+Internal rows updated                      = 0
+Internal commits                           = 0
+Internal rollbacks                         = 0
+Internal rollbacks due to deadlock         = 0
+Binds/precompiles attempted                = 0
+Rows deleted                               = 0
+Rows inserted                              = 0
+Rows updated                               = 0
+Rows selected                              = 0
+Rows read                                  = 606577
+Rows written                               = 0
+
+UOW log space used (Bytes)                 = 0
+Previous UOW completion timestamp          = 11/22/2019 21:53:59.825202
+Elapsed time of last completed uow (sec.ms)= 0.000000
+UOW start timestamp                        = 11/22/2019 21:53:59.827118
+UOW stop timestamp                         = 01/01/1970 08:00:00.000000
+UOW completion status                      = 0
+
+Open remote cursors                        = 0
+Open remote cursors with blocking          = 0
+Rejected Block Remote Cursor requests      = 0
+Accepted Block Remote Cursor requests      = 2
+Open local cursors                         = 0
+Open local cursors with blocking           = 0
+Total User CPU Time used by agent (s)      = 1.540696
+Total System CPU Time used by agent (s)    = 0.000000
+Host execution elapsed time                = 7.812080
+
+Package cache lookups                      = 1
+Package cache inserts                      = 1
+Application section lookups                = 2
+Application section inserts                = 1
+Catalog cache lookups                      = 28
+Catalog cache inserts                      = 0
+Catalog cache overflows                    = 0
+Catalog cache heap full                    = 0
+Catalog cache high water mark              = 0
+
+Number of hash joins                       = 0
+Number of hash loops                       = 0
+Number of hash join overflows              = 0
+Number of small hash join overflows        = 0
+
+
+Statement type                             = Dynamic SQL Statement
+Statement                                  = Close
+Section number                             = 4
+Application creator                        = NULLID
+Package name                               = SYSSN400
+Consistency Token                          =
+Package Version ID                         =
+Cursor name                                = SQL_CURSN400C4
+Statement member number                    = 0
+Statement start timestamp                  = 11/22/2019 21:53:59.831596
+Statement stop timestamp                   = 11/22/2019 21:54:07.640739
+Elapsed time of last completed stmt(sec.ms)= 0.000031
+Total Statement user CPU time              = 1.537630
+Total Statement system CPU time            = 0.000000
+SQL compiler cost estimate in timerons     = 232278
+SQL compiler cardinality estimate          = 1
+Degree of parallelism requested            = 1
+Number of agents working on statement      = 1
+Number of subagents created for statement  = 1
+Statement sorts                            = 1
+Total sort time                            = 0
+Sort overflows                             = 0
+Rows read                                  = 606577
+Rows written                               = 0
+Internal rows deleted                      = 0
+Internal rows updated                      = 0
+Internal rows inserted                     = 0
+Rows fetched                               = 0
+Buffer pool data logical reads             = 209364
+Buffer pool data physical reads            = 7030
+Buffer pool temporary data logical reads   = 0
+Buffer pool temporary data physical reads  = 0
+Buffer pool index logical reads            = 1213156
+Buffer pool index physical reads           = 3
+Buffer pool temporary index physical reads = 0
+Buffer pool xda logical reads              = 0
+Buffer pool xda physical reads             = 0
+Buffer pool temporary xda logical reads    = 0
+Buffer pool temporary xda physical reads   = 0
+Blocking cursor                            = YES
+Dynamic SQL statement text:select a.CHAR_COL8,b.VARCHAR_COL25 from ttt a,t1 b,t2 c  where a.VARCHAR_COL25=b.VARCHAR_COL25 and a.VARCHAR_COL26=b.VARCHAR_COL26 and b.VARCHAR_COL27='sadf' and b.VARCHAR_COL28='suiji' and a.char_col10=c.char_col10 with ur /*
+<OPTGUIDELINES>
+  <MSJOIN>
+          <NLJOIN>
+            <TBSCAN TABLE='a' FIRST='TRUE'/>
+            <IXSCAN TABLE='b' INDEX='T1_IDX4'/>
+          </NLJOIN>
+          <TBSCAN TABLE='c'/>
+        </MSJOIN>
+</OPTGUIDELINES>
+*/
+
+
+
+Agent process/thread ID                    = 102
+
+Memory usage for application:
+
+  Node number                                  = 0
+    Memory Pool Type                           = Other Memory
+       Current size (bytes)                    = 196608
+       High water mark (bytes)                 = 458752
+       Configured size (bytes)                 = 1911857152
+
+
+
+* Summary Table:
+
+Type      Number      Repetitions Total Time (s) Min Time (s)   Max Time (s)   Arithmetic Mean Geometric Mean Row(s) Fetched Row(s) Output
+--------- ----------- ----------- -------------- -------------- -------------- --------------- -------------- -------------- -------------
+Statement           1           1       7.809328       7.809328       7.809328        7.809328       7.809328              0             0
+
+* Total Entries:              1
+* Total Time:                 7.809328 seconds
+* Minimum Time:               7.809328 seconds
+* Maximum Time:               7.809328 seconds
+* Arithmetic Mean Time:       7.809328 seconds
+* Geometric Mean Time:        7.809328 seconds
+---------------------------------------------
+* Timestamp: Fri Nov 22 2019 21:54:07 CST

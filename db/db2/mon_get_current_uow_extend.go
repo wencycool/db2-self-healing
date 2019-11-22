@@ -13,9 +13,9 @@ const MAX_FORCE_LOG_USED_LIMIT int = 2 << 30 //超过2GB的日志使用量则杀
 type MonGetCurUowExtend struct {
 	MataData
 	SnapTime         time.Time `column:"CURRENT TIMESTAMP"`
-	AppHandle        int32     `column:"APPLICATION_HANDLE"`
+	AppHandle        int64     `column:"APPLICATION_HANDLE"`
 	AppId            string    `column:"APPLICATION_ID"`
-	UowId            int32     `column:"UOW_ID"`
+	UowId            int64     `column:"UOW_ID"`
 	ClientHostName   string    `column:"CLIENT_HOSTNAME"` //连接进来的客户端主机名
 	UowStartTime     time.Time `column:"UOW_START_TIME"`
 	AuthId           string    `column:"SESSION_AUTH_ID"` //执行用户ID
@@ -41,7 +41,7 @@ type MonGetCurUowExtend struct {
 	EventObj         string    `column:"EVENT_OBJECT"`          // 从agent中获取
 	EventState       string    `column:"EVENT_STATE"`           // 从agent中获取
 	ReqType          string    `column:"REQUEST_TYPE"`          // 从agent中获取
-	ActId            int32     `column:"ACTIVITY_ID"`           //从agent中获取  //当前正在执行的语句的actid，假如为存储过程，那么该agent是最内层正在执行的SQL的agentid
+	ActId            int64     `column:"ACTIVITY_ID"`           //从agent中获取  //当前正在执行的语句的actid，假如为存储过程，那么该agent是最内层正在执行的SQL的agentid
 	NestLevel        int       `column:"NESTING_LEVEL"`         // 从agent中获取
 	UtilInvId        string    `column:"UTILITY_INVOCATION_ID"` // 从agent中获取
 	HexId            string    `column:"EXECUTABLE_ID"`         // 从agent中获取,当前actid对应的HexId ，如果是reorg，runstats等运维作业，则为空
@@ -130,7 +130,7 @@ func (b BigTrxUowList) Swap(i, j int) {
 }
 
 //查找MonGetCurUowExtend是否存在,如果不存在返回nil，false,因事务数一般不会很多，因此采用遍历的方式直接查找
-func LookupMonGetCurUowExtendByAppHandle(uows []*MonGetCurUowExtend, appHandle int32) (*MonGetCurUowExtend, bool) {
+func LookupMonGetCurUowExtendByAppHandle(uows []*MonGetCurUowExtend, appHandle int64) (*MonGetCurUowExtend, bool) {
 	for _, uow := range uows {
 		if uow.AppHandle == appHandle {
 			return uow, true

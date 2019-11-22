@@ -11,17 +11,17 @@ import (
 
 //获取所有性能相关数据
 //设置5秒的超时时间
-func CollectPerfData(duration time.Duration) ([]*MonGetActStmt, []*MonGetTrxLog, []*MonGetHadr, []*MonGetLockWait, []*MonGetUtil, []*MonGetCurUowExtend, error) {
+func CollectPerfData(duration time.Duration) ([]*MonGetActStmt, []*MonGetCurUowExtend, []*MonGetTrxLog, []*MonGetHadr, []*MonGetLockWait, []*MonGetUtil, error) {
 	mon_get_act_stmt := NewMonGetActStmt()
 	mon_get_trx_log := NewMonGetTrxLog()
 	mon_get_hdr := NewMonGetHadr()
 	mon_get_lockwait := NewMonGetLockWait()
 	mon_get_util := NewMonGetUtil()
 	mon_get_cur_uow_extend := NewMonGetCurUowExtend()
-	sql_text_list := []string{mon_get_act_stmt.GetSqlText(), mon_get_trx_log.GetSqlText(),
+	sql_text_list := []string{mon_get_act_stmt.GetSqlText(),
+		mon_get_cur_uow_extend.GetSqlText(), mon_get_trx_log.GetSqlText(),
 		mon_get_hdr.GetSqlText(),
-		mon_get_lockwait.GetSqlText(), mon_get_util.GetSqlText(),
-		mon_get_cur_uow_extend.GetSqlText()}
+		mon_get_lockwait.GetSqlText(), mon_get_util.GetSqlText()}
 	t1 := time.Now()
 	cmd := exec.Command("db2", "+p", "-x", "-t")
 	cmd.SysProcAttr = &syscall.SysProcAttr{Setpgid: true} //设置进程组,方便杀掉相关子进程
@@ -51,8 +51,8 @@ func CollectPerfData(duration time.Duration) ([]*MonGetActStmt, []*MonGetTrxLog,
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, err
 	}
-	return GetMonGetActStmtList(result), GetMonGetTrxLogList(result),
+	return GetMonGetActStmtList(result), GetMonGetCurUowExtendList(result), GetMonGetTrxLogList(result),
 		GetMonGetHadrList(result),
-		GetMonGetLockWaitList(result), GetMonGetUtilList(result), GetMonGetCurUowExtendList(result), nil
+		GetMonGetLockWaitList(result), GetMonGetUtilList(result), nil
 
 }

@@ -12,16 +12,16 @@ import (
 type MonGetTbsp struct {
 	SnapTime      time.Time `column:"CURRENT TIMESTAMP"`
 	TbspName      string    `column:"TBSP_NAME"`
-	TbspId        int32     `column:"TBSP_ID"`   //已执行时间毫秒
+	TbspId        int64     `column:"TBSP_ID"`   //已执行时间毫秒
 	TbspType      string    `column:"TBSP_TYPE"` //DMS SMS
 	State         string    `column:"TBSP_STATE"`
 	ContType      string    `column:"TBSP_CONTENT_TYPE"` //ANY LARGE SYSTEMP USRTEMP
-	PageSize      int32     `column:"TBSP_PAGE_SIZE"`    //byte
-	ExtendSize    int32     `column:"TBSP_EXTENT_SIZE"`
-	FsCaching     int32     `column:"FS_CACHING"`                // If fs_caching is 0, file system caching is enabled. If fs_caching is 1, file system caching is disabled
-	AutoStorage   int32     `column:"TBSP_USING_AUTO_STORAGE"`   //A value of 1 means "Yes"; a value of 0 means "No"
-	AutoResize    int32     `column:"TBSP_AUTO_RESIZE_ENABLED"`  //A value of 1 means "Yes"; a value of 0 means "No"
-	ReclaimEnable int32     `column:"RECLAIMABLE_SPACE_ENABLED"` //If the table space is enabled for reclaimable storage, then this monitor element returns a value of 1. Otherwise, it returns a value of 0
+	PageSize      int64     `column:"TBSP_PAGE_SIZE"`    //byte
+	ExtendSize    int64     `column:"TBSP_EXTENT_SIZE"`
+	FsCaching     int64     `column:"FS_CACHING"`                // If fs_caching is 0, file system caching is enabled. If fs_caching is 1, file system caching is disabled
+	AutoStorage   int64     `column:"TBSP_USING_AUTO_STORAGE"`   //A value of 1 means "Yes"; a value of 0 means "No"
+	AutoResize    int64     `column:"TBSP_AUTO_RESIZE_ENABLED"`  //A value of 1 means "Yes"; a value of 0 means "No"
+	ReclaimEnable int64     `column:"RECLAIMABLE_SPACE_ENABLED"` //If the table space is enabled for reclaimable storage, then this monitor element returns a value of 1. Otherwise, it returns a value of 0
 	UsedPages     int       `column:"TBSP_USED_PAGES"`
 	FreePages     int       `column:"TBSP_FREE_PAGES"`
 	UsablePages   int       `column:"TBSP_USABLE_PAGES"`
@@ -30,7 +30,7 @@ type MonGetTbsp struct {
 	HWM           int       `column:"TBSP_PAGE_TOP"`
 	MaxHWM        int       `column:"TBSP_MAX_PAGE_TOP"`  //The highest allocated page number for a DMS table space since the database was activated.
 	StorageName   string    `column:"STORAGE_GROUP_NAME"` //Name of a storage group.
-	StorageId     int32     `column:"STORAGE_GROUP_ID"`   //An integer that uniquely represents a storage group used by the current database.
+	StorageId     int64     `column:"STORAGE_GROUP_ID"`   //An integer that uniquely represents a storage group used by the current database.
 }
 
 //获取表空间信息列表
@@ -61,18 +61,18 @@ func NewMonGetTbspList() []*MonGetTbsp {
 type MonGetContainer struct {
 	SnapTime      time.Time `column:"CURRENT TIMESTAMP"`
 	TbspName      string    `column:"TBSP_NAME"`
-	TbspId        int32     `column:"TBSP_ID"` //已执行时间毫秒
+	TbspId        int64     `column:"TBSP_ID"` //已执行时间毫秒
 	ContainName   string    `column:"CONTAINER_NAME"`
-	ContainId     int32     `column:"CONTAINER_ID"`
+	ContainId     int64     `column:"CONTAINER_ID"`
 	ContainType   string    `column:"CONTAINER_TYPE"` //DISK_EXTENT_TAG DISK_PAGE_TAG FILE_EXTENT_TAG FILE_EXTENT_TAG PATH
-	StripeSet     int32     `column:"STRIPE_SET"`
+	StripeSet     int64     `column:"STRIPE_SET"`
 	TotalPages    int       `column:"TOTAL_PAGES"`
 	UsablePages   int       `column:"USABLE_PAGES"`
-	Accessiable   int32     `column:"ACCESSIBLE"`
+	Accessiable   int64     `column:"ACCESSIBLE"`
 	FsId          string    `column:"FS_ID"` //文件系统挂载点或者设备的Dev，finfo,_ := os.Stat("/"),reflect.ValueOf(finfo.Sys()).Elem().FieldByName("Dev").Uint()
 	FsTotalSize   int       `column:"FS_TOTAL_SIZE"`
 	FsUsedSize    int       `column:"FS_USED_SIZE"`
-	StoragePathId int32     `column:"DB_STORAGE_PATH_ID"`
+	StoragePathId int64     `column:"DB_STORAGE_PATH_ID"`
 }
 
 //获取表空间容器信息列表

@@ -11,6 +11,7 @@ func main() {
 	exec.Command("db2", "connect to sample")
 	dbname := "sample"
 	t1 := time.Now()
+	db2.CollectPerfData(time.Second * 100)
 	advis, err := db2.GetAdvisRaw(dbname, "db2inst1", "select * from ttt where varchar_col30='asdf' with ur")
 	if err != nil {
 		panic(err)
