@@ -56,7 +56,7 @@ func NewMonGetPkgCacheStmtByPlanId(planid int64) *MonGetPkgCacheStmt {
 	m := new(MonGetPkgCacheStmt)
 	sqlArgs := fmt.Sprintf("select %s from table(MON_GET_PKG_CACHE_STMT(NULL,null,null,-1)) as t  where planid=%d with ur", reflectMonGet(m), planid)
 	cmd := exec.Command("db2", "-x", sqlArgs)
-	fmt.Println(sqlArgs)
+	log.Tracef("按照planid获取pkgcache语句为:%s\n", sqlArgs)
 	bs, err := cmd.CombinedOutput()
 	if err != nil {
 		log.Warn(err)

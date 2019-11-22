@@ -313,7 +313,7 @@ func (n *Node) HasRightOperatorTabScan() bool {
 
 //MSJOIN=a+b;HSJOIN=a+b;NLjoin=a*b
 //叶子节点的父节点为TBSCAN,或者fetch（IX操作+TABSCAN)操作
-//根据执行计划预测需要扫描多少行数据
+//根据执行计划预测需要扫描多少行数据,在pkg_cache中对应的rowsread的值如果小于此值，则执行计划评估准确
 func (n *Node) PredicateRowsScan() int {
 	//NLJOIN,HSJOIN,MSJOIN   #ZZJOIN暂不考虑
 	//大于2个节点的节点不作考虑，多节点情况不会涉及join问题
