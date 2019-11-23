@@ -16,10 +16,6 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
-		dlist, err := expln.GetStream()
-		if err != nil {
-			panic(err)
-		}
 		var rowsRead int
 		pkg_stmt := db2.NewMonGetPkgCacheStmt(act.HexId)
 		if pkg_stmt.Executions == 0 {
@@ -32,6 +28,6 @@ func main() {
 		} else {
 			rowsRead = pkg_stmt.RowsRead / pkg_stmt.Executions
 		}
-		fmt.Println("预计数据读取量:", db2.NewNode(dlist).PredicateRowsScan(), rowsRead)
+		fmt.Println("预计数据读取量:", expln.PredicateRowsScan(), rowsRead)
 	}
 }

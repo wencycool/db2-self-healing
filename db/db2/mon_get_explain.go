@@ -11,6 +11,11 @@ import (
 
 //获取SQL的执行计划信息
 type MonGetExplain struct {
+	objs        []*MonGetExplainObj
+	operators   []*MonGetExplainOperator
+	predicates  []*MonGetExplainPredicate
+	streams     []*MonGetExplainStream
+	planNode    *Node
 	SnapTime    time.Time `column:"CURRENT TIMESTAMP"`
 	HexId       string    `column:"executable_id"`
 	ExplnSchema string    `column:"EXPLAIN_SCHEMA"`
@@ -24,8 +29,7 @@ type MonGetExplain struct {
 //返回执行计划的结构体和错误信息
 func NewMonGetExplain(hexid string) (*MonGetExplain, error) {
 	self := new(MonGetExplain)
-	curInstanceName, _ := GetCurInstanceName()
-	argSql := fmt.Sprintf("CALL EXPLAIN_FROM_SECTION(%s,'M',NULL,0,'%s',?,?,?,?,?)", hexid, strings.ToUpper(curInstanceName))
+	argSql := fmt.Sprintf("CALL EXPLAIN_FROM_SECTION(%s,'M',NULL,0,NULL,?,?,?,?,?)", hexid)
 	cmd := exec.Command("db2", "-x", argSql)
 	bs, err := cmd.CombinedOutput()
 	if err != nil {
@@ -33,6 +37,7 @@ func NewMonGetExplain(hexid string) (*MonGetExplain, error) {
 	}
 	self.HexId = hexid
 	last_line := "" //定义延迟行
+FOR1:
 	for _, line := range strings.Split(string(bs), "\n") {
 		fields := strings.Split(line, ":")
 		if len(fields) != 2 {
@@ -53,15 +58,29 @@ func NewMonGetExplain(hexid string) (*MonGetExplain, error) {
 			self.SrcSchema = val
 		case strings.Contains(last_line, "SOURCE_VERSION"):
 			self.SrcVersion = val
-			return self, nil
+			//return self, nil
+			break FOR1
 		}
 		last_line = line
 	}
-	return nil, errors.New("call explain sucess but cannot get explain information")
+	if self.operators, err = self.getOperator(); err != nil {
+		return nil, err
+	}
+	if self.objs, err = self.getObj(); err != nil {
+		return nil, err
+	}
+	if self.streams, err = self.getStream(); err != nil {
+		return nil, err
+	}
+	if self.predicates, err = self.getPredicate(); err != nil {
+		return nil, err
+	}
+	self.planNode = newNode(self.streams)
+	return self, nil
 }
 
 //获取执行计划的SQL相关的表以及索引等对象信息
-
+/*
 func (m *MonGetExplain) GetStream() ([]*MonGetExplainStream, error) {
 	return m.getStream()
 }
@@ -74,7 +93,7 @@ func (m *MonGetExplain) GetObj() ([]*MonGetExplainObj, error) {
 func (m *MonGetExplain) GetPredicate() ([]*MonGetExplainPredicate, error) {
 	return m.getPredicate()
 }
-
+*/
 //获取执行计划的operator信息
 func (m *MonGetExplain) getOperator() ([]*MonGetExplainOperator, error) {
 	col_str := reflectMonGet(new(MonGetExplainOperator))
@@ -84,7 +103,7 @@ func (m *MonGetExplain) getOperator() ([]*MonGetExplainOperator, error) {
 	//找到相关字段以后进行字段解析
 	bs, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, err
+		return nil, errors.New(string(bs))
 	}
 	ms := make([]*MonGetExplainOperator, 0)
 	for _, line := range strings.Split(string(bs), "\n") {
@@ -111,7 +130,7 @@ func (m *MonGetExplain) getStream() ([]*MonGetExplainStream, error) {
 	//找到相关字段以后进行字段解析
 	bs, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, err
+		return nil, errors.New(string(bs))
 	}
 	ms := make([]*MonGetExplainStream, 0)
 	for _, line := range strings.Split(string(bs), "\n") {
@@ -137,7 +156,7 @@ func (m *MonGetExplain) getObj() ([]*MonGetExplainObj, error) {
 	//找到相关字段以后进行字段解析
 	bs, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, err
+		return nil, errors.New(string(bs))
 	}
 	ms := make([]*MonGetExplainObj, 0)
 	for _, line := range strings.Split(string(bs), "\n") {
@@ -196,13 +215,13 @@ func (m *MonGetExplain) getObj() ([]*MonGetExplainObj, error) {
 //获取每一步骤中的操作预测信息
 func (m *MonGetExplain) getPredicate() ([]*MonGetExplainPredicate, error) {
 	col_str := reflectMonGet(new(MonGetExplainPredicate))
-	argSql := fmt.Sprintf("select %s from EXPLAIN_OPERATOR where EXPLAIN_PREDICATE='%s' and EXPLAIN_TIME='%s' with ur",
+	argSql := fmt.Sprintf("select %s from EXPLAIN_PREDICATE where EXPLAIN_REQUESTER='%s' and EXPLAIN_TIME='%s' with ur",
 		col_str, m.ExplnReq, m.ExplnTime)
 	cmd := exec.Command("db2", "-x", argSql)
 	//找到相关字段以后进行字段解析
 	bs, err := cmd.CombinedOutput()
 	if err != nil {
-		return nil, err
+		return nil, errors.New(string(bs))
 	}
 	ms := make([]*MonGetExplainPredicate, 0)
 	for _, line := range strings.Split(string(bs), "\n") {
@@ -370,11 +389,6 @@ type MonGetExplainPredicate struct {
 	HowApplied   string    `column:"HOW_APPLIED"`   // 重要指标,How predicate is being used by the specified operator
 	RelopType    string    `column:"RELOP_TYPE"`    //重要指标The type of relational operator used in this predicate
 	FilterFactor int       `column:"FILTER_FACTOR"` //The estimated fraction of rows that will be qualified by this predicate.A value of "-1" is shown when FILTER_FACTOR is not applicable. FILTER_FACTOR is not applicable for operator predicates constructed by the Explain tool which are not optimizer objects and do not exist in the optimizer plan.
-	TgtId        int       `column:"TARGET_ID"`     //-1 if TARGET_TYPE is 'D',可认为是ParentId
-	ObjSchema    string    `column:"OBJECT_SCHEMA"` //Schema to which the affected data object belongs. Set to null if both SOURCE_TYPE and TARGET_TYPE are 'O'
-	ObjName      string    `column:"OBJECT_NAME"`   //Name of the object that is the subject of data stream. Set to null if both SOURCE_TYPE and TARGET_TYPE are 'O'
-	StreamCount  int       `column:"STREAM_COUNT"`  //Estimated cardinality of data stream.
-	ColCount     int       `column:"COLUMN_COUNT"`  //Number of columns in data stream.
 }
 
 //根据operatorid返回该操作下的所有predicate操作
