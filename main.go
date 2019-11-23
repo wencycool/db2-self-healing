@@ -178,15 +178,17 @@ func main() {
 		var rowsRead int
 		if pkgCacheStmt.Executions != 0 {
 			rowsRead = pkgCacheStmt.RowsRead / pkgCacheStmt.Executions
-		} else if act.ActCount != 0 {
-			rowsRead = act.RowsRead * 2 / act.ActCount //切片信息接近中位数
+		} else if act.ActDataCount != 0 {
+			rowsRead = act.RowsRead * 2 / act.ActDataCount //切片信息接近中位数
 		} else {
 			rowsRead = -1
 		}
 		t1 := time.Now()
 		fmt.Printf("      检查是否包含HashJoin			%s    	--高并发交易SQL不应出现\n", PrintColorf(expln.HasHSJoin(), expln.HasHSJoin()))
 		fmt.Printf("      检查NLJoin右子树是否包含IXAND:		%s    	--高并发交易SQL不应出现\n", PrintColorf(expln.HasRightOperatorIXAnd(), expln.HasRightOperatorIXAnd()))
+		fmt.Printf("      检查是否存在SargeIndexScan   :		%s		--任何SQL不应出现\n", PrintColorf(expln.HasIdxSargePredicate(), expln.HasIdxSargePredicate()))
 		fmt.Printf("      检查NLJoin右子树是否包含TabScan:		%s		--任何SQL不应出现\n", PrintColorf(expln.HasRightOperatorTabScan(), expln.HasRightOperatorTabScan()))
+
 		fmt.Printf("      执行计划预估需要行读数:%-10d,实际行读[或当前行读]:%-10d     --如果预估行读过大或者实际行读远大于（5倍以上）预估行读，则执行计划存在问题\n", expln.PredicateRowsScan(), rowsRead)
 		fmt.Printf("      打印一共花费时长:%s\n", time.Now().Sub(t1).String())
 		fmt.Printf("    打印Advis信息,执行语句:db2advis -d %s -s \"%s\" -q %s -n %s \n", dbname, pkgCacheStmt.StmtText, act.AuthId, act.AuthId)

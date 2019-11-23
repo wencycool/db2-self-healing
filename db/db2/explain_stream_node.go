@@ -473,6 +473,103 @@ func (n *Node) hasRightOperatorTabScan() bool {
 	return false
 }
 
+/*
+select a.CHAR_COL8,b.VARCHAR_COL25 from ttt a,t1 b,t2 c  where a.VARCHAR_COL25=b.VARCHAR_COL25 and a.VARCHAR_COL26=b.VARCHAR_COL26 and b.VARCHAR_COL27='sadf' and b.VARCHAR_COL28!='suiji' and a.char_col10=c.char_col10 with ur
+/
+<OPTGUIDELINES>
+	<NLJOIN>
+	  <TBSCAN TABLE='a' FIRST='TRUE'/>
+	  <IXSCAN TABLE='b' INDEX='T1_IDX4'/>
+	</NLJOIN>
+</OPTGUIDELINES>
+/
+
+Access Plan:
+-----------
+Total Cost:             2.10252e+10
+Query Degree:           1
+
+Rows
+RETURN
+(   1)
+Cost
+I/O
+|
+3.71901e-08
+HSJOIN
+(   2)
+2.10252e+10
+2.99093e+09
+/---------+----------\
+1.84792e-06                 11710
+NLJOIN                   TBSCAN
+(   3)                   (   7)
+2.10252e+10                4489.54
+2.99092e+09                 3863
+/------+-------\                |
+581853           3.17593e-12       11710
+TBSCAN             FETCH      TABLE: DB2INST1
+(   4)             (   5)           T2
+225522             63689.5          Q1
+194085             9062.03
+|              /---+----\
+581853        15300        15301
+TABLE: DB2INST1  IXSCAN   TABLE: DB2INST1
+TTT        (   6)         T1
+Q3         98.2496        Q2
+38
+|
+15301
+INDEX: DB2INST1
+T1_IDX4
+Q2
+
+6) IXSCAN: (Index Scan)
+Cumulative Total Cost:          98.2496
+Cumulative CPU Cost:            4.56412e+07
+Cumulative I/O Cost:            38
+Cumulative Re-Total Cost:       5.35052
+Cumulative Re-CPU Cost:         4.53103e+07
+Cumulative Re-I/O Cost:         0
+Cumulative First Row Cost:      7.0514
+Estimated Bufferpool Buffers:   39
+
+Arguments:
+---------
+MAXPAGES: (Maximum pages for prefetch)
+38
+PREFETCH: (Type of Prefetch)
+SEQUENTIAL,READAHEAD
+ROWLOCK : (Row Lock intent)
+NONE
+SCANDIR : (Scan Direction)
+FORWARD
+TABLOCK : (Table Lock intent)
+INTENT NONE
+TBISOLVL: (Table access Isolation Level)
+UNCOMMITTED READ
+
+Predicates:
+----------
+2) Sargable Predicate,
+Comparison Operator:            Not Equal (<>)
+Subquery Input Required:        No
+Filter Factor:                  0.999935
+
+Predicate Text:
+--------------
+(Q2."VARCHAR_COL28" <> 'suiji')
+
+
+3) Stop Key Predicate,
+Comparison Operator:            Is Not Null
+Subquery Input Required:        No
+Filter Factor:                  1
+
+Predicate Text:
+--------------
+Q2."VARCHAR_COL28" IS NOT NULL
+*/
 //在高并发下的SQL不应该出现全索引扫描的情况,不应出现begin index,end index,即索引的扫描不应该是Sargbal类型
 //查找所有索引节点中是否存在sargbal类型的扫描
 func (n *Node) hasIdxSargePredicate(predicateList MonGetExplainPredicateList) bool {

@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-//act中只包含目前正在执行的SQL
+//act中只包含目前正在执行的SQL,排除处于任何等待状态的SQL
 type MonGetActStmt struct {
 	MataData
 	SnapTime        time.Time `column:"CURRENT TIMESTAMP"`
@@ -45,14 +45,19 @@ type MonGetActStmt struct {
 	HashJoins       int       `column:"TOTAL_HASH_JOINS"`
 	HashLoops       int       `column:"TOTAL_HASH_LOOPS"`
 	HashFlows       int       `column:"HASH_JOIN_OVERFLOWS"`
-	AuthId          string    `column:"SESSION_AUTH_ID"`
-	AppId           string    `column:"APPLICATION_ID"`
+	AuthId          string    `column:"SESSION_AUTH_ID"` //从agent中获取
+	AppId           string    `column:"APPLICATION_ID"`  //从agent中获取
+	AgentState      string    `column:"AGENT_STATE"`     // 从agent中获取
+	EventType       string    `column:"EVENT_TYPE"`      // 从agent中获取
+	EventObj        string    `column:"EVENT_OBJECT"`    // 从agent中获取
+	EventState      string    `column:"EVENT_STATE"`     // 从agent中获取
+	ReqType         string    `column:"REQUEST_TYPE"`    // 从agent中获取
 }
 
 func NewMonGetActStmt() *MonGetActStmt {
 	m := new(MonGetActStmt)
 	m.rep = mon_get_rep
-	m.tabname = "(select act.*,uow.SESSION_AUTH_ID,uow.APPLICATION_ID from TABLE(MON_GET_ACTIVITY(NULL, -1))act left join TABLE(MON_GET_UNIT_OF_WORK(null,-1)) as uow on act.APPLICATION_HANDLE=uow.APPLICATION_HANDLE and act.UOW_ID=uow.UOW_ID and uow.APPLICATION_ID != application_id())"
+	m.tabname = "(select act.*,agent.SESSION_AUTH_ID,agent.APPLICATION_ID,agent.AGENT_STATE,agent.EVENT_TYPE,agent.EVENT_OBJECT,agent.EVENT_STATE,agent.REQUEST_TYPE from TABLE(MON_GET_ACTIVITY(NULL, -1)) act left join table(MON_GET_AGENT('','',cast(NULL as bigint), -1)) as agent on act.APPLICATION_HANDLE=agent.APPLICATION_HANDLE and act.UOW_ID=agent.UOW_ID and act.ACTIVITY_ID=agent.ACTIVITY_ID and agent.AGENT_TYPE='COORDINATOR' )"
 	m.start_flag = m.tabname + mon_get_start_flag
 	m.end_flag = m.tabname + mon_get_end_flag
 	return m
@@ -62,7 +67,7 @@ func (m *MonGetActStmt) GetSqlText() string {
 	return genSql(m)
 }
 
-//通过从数据库返回的结果，生成结果集
+//通过从数据库返回的结果，生成结果集,处于锁等待或者其他等待状态的不当做正在执行的SQL语句
 func GetMonGetActStmtList(str string) []*MonGetActStmt {
 	m := NewMonGetActStmt()
 	ms := make([]*MonGetActStmt, 0)
@@ -77,6 +82,10 @@ func GetMonGetActStmtList(str string) []*MonGetActStmt {
 		d.start_flag = ""
 		d.end_flag = ""
 		if err := renderStruct(d, line); err != nil {
+			continue
+		}
+		//如果agent空闲状态，即处于等待状态，则当做正在执行的SQL语句
+		if d.EventState == "IDLE" {
 			continue
 		}
 		ms = append(ms, d)
