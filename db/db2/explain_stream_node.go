@@ -11,7 +11,7 @@ import (
 
 type StreamList []*MonGetExplainStream
 
-func (ds StreamList) FindSrcId(tgtId int) bool {
+func (ds StreamList) FindSrcId(tgtId int64) bool {
 	for _, d := range ds {
 		if d.SrcId == tgtId {
 			return true
@@ -23,7 +23,7 @@ func (ds StreamList) FindSrcId(tgtId int) bool {
 //将dlist中数据存放到Node中
 func NewNode(dlist StreamList) *Node {
 	//查找root节点,TgtId不是其它节点SrcId值的时候则为root节点
-	LfPr := make([][3]int, 0) //保留未被添加的节点
+	LfPr := make([][3]int64, 0) //保留未被添加的节点
 	root := new(Node)
 	for i, d := range dlist {
 		if !dlist.FindSrcId(d.TgtId) {
@@ -33,7 +33,7 @@ func NewNode(dlist StreamList) *Node {
 			root.Stream = dlist[i]
 			root.Level = 0
 		}
-		LfPr = append(LfPr, [3]int{i, d.SrcId, d.TgtId})
+		LfPr = append(LfPr, [3]int64{int64(i), d.SrcId, d.TgtId})
 	}
 	//开始进行节点添加，如果节点被添加后则踢出,最大尝试1万次循环
 	nbr := 0
@@ -57,8 +57,8 @@ func NewNode(dlist StreamList) *Node {
 
 type Node struct {
 	Stream   *MonGetExplainStream //当前数据
-	Id       int                  //SrcId 当前节点
-	ParentId int                  //父节点
+	Id       int64                //SrcId 当前节点
+	ParentId int64                //父节点
 	Level    int                  //当前节点的层级
 	NextList []*Node              //孩子节点
 }
@@ -72,7 +72,7 @@ func (n *Node) add(nd *Node) bool {
 }
 
 //查找是否存在指定SrcId,如果找到则返回该Node节点指针，DFS深度优先
-func (n *Node) searchParendNode(ParentId int) (*Node, bool) {
+func (n *Node) searchParendNode(ParentId int64) (*Node, bool) {
 	stack := new(Stack)
 	stack.push(n)
 	for !stack.isEmpty() {

@@ -32,9 +32,7 @@ func (n *Node) numberJoins(opType string) int {
 		nd := stack.pop()
 		//如果nd有且只有两个节点，那么nd为JOIN节点
 		if len(nd.NextList) == 2 {
-			if strings.ToUpper(opType) == "ALL" {
-				cnt++
-			} else if nd.Stream.SrcOpType == opType {
+			if strings.ToUpper(opType) == "ALL" || nd.Stream.SrcOpType == opType {
 				cnt++
 			}
 		}
@@ -362,7 +360,7 @@ func (n *Node) HasIdxSargePredicate(predicateList MonGetExplainPredicateList) bo
 //无法用小表突变的技术来检查数据量的变化，该问题属于局部范围内的突变，这种情况较为棘手
 //对于这种问题单纯从执行计划上很难找出原因，必须结合快照来判断当前执行计划是否存在问题
 //出现数据倾斜的问题往往执行时间较长，需要结合mon_get_pkg_cache_stmt中的度量指标和执行计划中的预估值来判断偏差是否过大(一般至少有数倍的差距)
-
+//高并发下行扫描不应该过多，适当设置阈值判断是否发生如此多的rowsread是合理情况。
 //MSJOIN=a+b;HSJOIN=a+b;NLjoin=a*b
 //叶子节点的父节点为TBSCAN,或者fetch（IX操作+TABSCAN)操作
 //根据执行计划预测需要扫描多少行数据,在pkg_cache中对应的rowsread的值如果小于此值，则执行计划评估准确
@@ -397,3 +395,11 @@ func (n *Node) PredicateRowsScan() int {
 	}
 	return 0
 }
+
+//----------------------------------------慢查询情况常见错误执行计划分析-------------------------------------//
+//在一条SQL执行非常缓慢的时候常见的有如下几点:
+// 1. load场景，数据量大，索引多rebuild时间长，主要发生在rebuild时间；reorg场景，runstats场景等，这些不涉及执行计划剔除
+// 2. 一个存储过程中嵌套多个SQL循环语句，每一个SQL执行可能不是特别慢，但是循环次数太多导致时间增加较多
+// 3. 一条SQL实际执行时间过长,这个是最为常见最容易出问题的地方，从执行计划结合快照主要分析此类语句。分析方法：
+// 是否涉及到排序？ 是否出现了hashloop？ 是否表读记录数极多？是否出现了大量的索引扫描？ 是否出现了大量的临时表空间读写？不管哪种问题，作为自动推荐
+//最常见的方式为：1. 统计信息是否合理？ 2. 索引是否多余？是否缺失？ 3. 是否数据量突增导致缓慢为正常现象,数据清理?

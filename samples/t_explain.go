@@ -20,7 +20,18 @@ func main() {
 		if err != nil {
 			panic(err)
 		}
+		var rowsRead int
 		pkg_stmt := db2.NewMonGetPkgCacheStmt(act.HexId)
-		fmt.Println("预计数据读取量:", db2.NewNode(dlist).PredicateRowsScan(), pkg_stmt.RowsRead/pkg_stmt.Executions)
+		if pkg_stmt.Executions == 0 {
+			if act.ActCount == 0 {
+				rowsRead = -1
+			} else {
+				rowsRead = 2 * (act.RowsRead / act.ActCount)
+			}
+
+		} else {
+			rowsRead = pkg_stmt.RowsRead / pkg_stmt.Executions
+		}
+		fmt.Println("预计数据读取量:", db2.NewNode(dlist).PredicateRowsScan(), rowsRead)
 	}
 }

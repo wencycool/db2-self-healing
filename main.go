@@ -35,7 +35,7 @@ func main() {
 	acts, uow_extends, Trxlogs, _, locks, utils, _ := db2.CollectPerfData(time.Duration(time.Second * 10))
 	//整体情况分析：1、 是否存在大事务；2、找出最古老事务；3、当前活动连接情况；4、当前锁等待情况
 	//给定一个APP查看当前SQL语句或者最近一次SQL语句
-	findSQL := func(appHandle int32) string {
+	findSQL := func(appHandle int64) string {
 		if uow, ok := db2.LookupMonGetCurUowExtendByAppHandle(uow_extends, appHandle); ok {
 			switch {
 			case uow.HexId != "":
@@ -199,7 +199,7 @@ func main() {
 
 }
 
-func intListToStr(l []int32, rep string) string {
+func intListToStr(l []int64, rep string) string {
 	r := make([]string, 0)
 	for _, v := range l {
 		r = append(r, strconv.Itoa(int(v)))
