@@ -284,6 +284,43 @@ Access Plan:
  TABLE: DB2INST1  TABLE: DB2INST1
        TTT              T1
        Q2               Q1
+
+如下执行计划如果4）步骤评估不准确，结果集可能是较大的数据比如评估出来的结果是10以上，那么5)就会发生严重的表扫;除非SQL191112223538190为唯一索引或者主键
+Access Plan:
+-----------
+        Total Cost:             225567
+        Query Degree:           1
+
+                          Rows
+                         RETURN
+                         (   1)
+                          Cost
+                           I/O
+                           |
+                          1.119
+                         NLJOIN
+                         (   2)
+                         225567
+                         194087
+                 /---------+---------\
+                1                     1.119
+             FETCH                   TBSCAN
+             (   3)                  (   5)
+             14.1116                 225553
+                2                    194085
+           /---+----\                  |
+          1         581853           581853
+       IXSCAN   TABLE: DB2INST1  TABLE: DB2INST1
+       (   4)         TTT              TTT
+       7.06487        Q1               Q2
+          1
+         |
+       581853
+   INDEX: SYSIBM
+ SQL191112223538190
+         Q1
+
+
 */
 //对于NLJoin，右侧子operator不应该是tabscan操作
 func (n *Node) HasRightOperatorTabScan() bool {
@@ -301,7 +338,22 @@ func (n *Node) HasRightOperatorTabScan() bool {
 	return false
 }
 
-//不应该出现全索引扫描的情况,不应出现begin index,end index,即索引的扫描不应该是Sargbal类型
+//在高并发下的SQL不应该出现全索引扫描的情况,不应出现begin index,end index,即索引的扫描不应该是Sargbal类型
+//查找所有索引节点中是否存在sargbal类型的扫描
+func (n *Node) HasIdxSargePredicate(predicateList MonGetExplainPredicateList) bool {
+	stack := new(Stack)
+	stack.push(n)
+	for !stack.isEmpty() {
+		nd := stack.pop()
+		if nd.Stream.SrcOpType == "IXSCAN" && predicateList.hasAppliedByOperatorId(nd.Stream.SrcId, "SARG") {
+			return true
+		}
+		for _, v := range nd.NextList {
+			stack.push(v)
+		}
+	}
+	return false
+}
 
 //数据发生倾斜导致问题
 //条件范围内，数据发生倾斜导致问题(比如一天之内发生严重倾斜)

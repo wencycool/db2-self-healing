@@ -61,7 +61,75 @@ func NewMonGetExplain(hexid string) (*MonGetExplain, error) {
 }
 
 //获取执行计划的SQL相关的表以及索引等对象信息
+
+func (m *MonGetExplain) GetStream() ([]*MonGetExplainStream, error) {
+	return m.getStream()
+}
+func (m *MonGetExplain) GetOperator() ([]*MonGetExplainOperator, error) {
+	return m.getOperator()
+}
 func (m *MonGetExplain) GetObj() ([]*MonGetExplainObj, error) {
+	return m.getObj()
+}
+func (m *MonGetExplain) GetPredicate() ([]*MonGetExplainPredicate, error) {
+	return m.getPredicate()
+}
+
+//获取执行计划的operator信息
+func (m *MonGetExplain) getOperator() ([]*MonGetExplainOperator, error) {
+	col_str := reflectMonGet(new(MonGetExplainOperator))
+	argSql := fmt.Sprintf("select %s from EXPLAIN_OPERATOR where EXPLAIN_REQUESTER='%s' and EXPLAIN_TIME='%s' with ur",
+		col_str, m.ExplnReq, m.ExplnTime)
+	cmd := exec.Command("db2", "-x", argSql)
+	//找到相关字段以后进行字段解析
+	bs, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, err
+	}
+	ms := make([]*MonGetExplainOperator, 0)
+	for _, line := range strings.Split(string(bs), "\n") {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		d := new(MonGetExplainOperator)
+		if err := renderStruct(d, line); err != nil {
+			log.Warn(err)
+			continue
+		}
+		ms = append(ms, d)
+	}
+	return ms, nil
+}
+
+//获取执行计划的Stream信息
+func (m *MonGetExplain) getStream() ([]*MonGetExplainStream, error) {
+	col_str := reflectMonGet(new(MonGetExplainStream))
+	//必须对stream_id进行排序，保持左右节点顺序
+	argSql := fmt.Sprintf("select %s from (select a.*,b.OPERATOR_TYPE,b.TOTAL_COST from EXPLAIN_STREAM a left join EXPLAIN_OPERATOR  b on a.EXPLAIN_REQUESTER=b.EXPLAIN_REQUESTER and a.EXPLAIN_TIME=b.EXPLAIN_TIME and a.SOURCE_ID=b.OPERATOR_ID) where EXPLAIN_REQUESTER='%s' and EXPLAIN_TIME='%s' order by stream_id asc with ur",
+		col_str, m.ExplnReq, m.ExplnTime)
+	cmd := exec.Command("db2", "-x", argSql)
+	//找到相关字段以后进行字段解析
+	bs, err := cmd.CombinedOutput()
+	if err != nil {
+		return nil, err
+	}
+	ms := make([]*MonGetExplainStream, 0)
+	for _, line := range strings.Split(string(bs), "\n") {
+		if strings.TrimSpace(line) == "" {
+			continue
+		}
+		d := new(MonGetExplainStream)
+		if err := renderStruct(d, line); err != nil {
+			log.Warn(err)
+			continue
+		}
+		ms = append(ms, d)
+	}
+	return ms, nil
+}
+
+//获取执行计划涉及到的对象信息
+func (m *MonGetExplain) getObj() ([]*MonGetExplainObj, error) {
 	col_str := reflectMonGet(new(MonGetExplainObj))
 	argSql := fmt.Sprintf("select %s from EXPLAIN_OBJECT where EXPLAIN_REQUESTER='%s' and EXPLAIN_TIME='%s' with ur",
 		col_str, m.ExplnReq, m.ExplnTime)
@@ -125,10 +193,10 @@ func (m *MonGetExplain) GetObj() ([]*MonGetExplainObj, error) {
 	return ms, nil
 }
 
-//获取执行计划的operator信息
-func (m *MonGetExplain) getOperator() ([]*MonGetExplainOperator, error) {
-	col_str := reflectMonGet(new(MonGetExplainOperator))
-	argSql := fmt.Sprintf("select %s from EXPLAIN_OPERATOR where EXPLAIN_REQUESTER='%s' and EXPLAIN_TIME='%s' with ur",
+//获取每一步骤中的操作预测信息
+func (m *MonGetExplain) getPredicate() ([]*MonGetExplainPredicate, error) {
+	col_str := reflectMonGet(new(MonGetExplainPredicate))
+	argSql := fmt.Sprintf("select %s from EXPLAIN_OPERATOR where EXPLAIN_PREDICATE='%s' and EXPLAIN_TIME='%s' with ur",
 		col_str, m.ExplnReq, m.ExplnTime)
 	cmd := exec.Command("db2", "-x", argSql)
 	//找到相关字段以后进行字段解析
@@ -136,12 +204,12 @@ func (m *MonGetExplain) getOperator() ([]*MonGetExplainOperator, error) {
 	if err != nil {
 		return nil, err
 	}
-	ms := make([]*MonGetExplainOperator, 0)
+	ms := make([]*MonGetExplainPredicate, 0)
 	for _, line := range strings.Split(string(bs), "\n") {
 		if strings.TrimSpace(line) == "" {
 			continue
 		}
-		d := new(MonGetExplainOperator)
+		d := new(MonGetExplainPredicate)
 		if err := renderStruct(d, line); err != nil {
 			log.Warn(err)
 			continue
@@ -149,40 +217,6 @@ func (m *MonGetExplain) getOperator() ([]*MonGetExplainOperator, error) {
 		ms = append(ms, d)
 	}
 	return ms, nil
-}
-
-//获取执行计划的Stream信息
-func (m *MonGetExplain) getStream() ([]*MonGetExplainStream, error) {
-	col_str := reflectMonGet(new(MonGetExplainStream))
-	//必须对stream_id进行排序，保持左右节点顺序
-	argSql := fmt.Sprintf("select %s from (select a.*,b.OPERATOR_TYPE,b.TOTAL_COST from EXPLAIN_STREAM a left join EXPLAIN_OPERATOR  b on a.EXPLAIN_REQUESTER=b.EXPLAIN_REQUESTER and a.EXPLAIN_TIME=b.EXPLAIN_TIME and a.SOURCE_ID=b.OPERATOR_ID) where EXPLAIN_REQUESTER='%s' and EXPLAIN_TIME='%s' order by stream_id asc with ur",
-		col_str, m.ExplnReq, m.ExplnTime)
-	cmd := exec.Command("db2", "-x", argSql)
-	//找到相关字段以后进行字段解析
-	bs, err := cmd.CombinedOutput()
-	if err != nil {
-		return nil, err
-	}
-	ms := make([]*MonGetExplainStream, 0)
-	for _, line := range strings.Split(string(bs), "\n") {
-		if strings.TrimSpace(line) == "" {
-			continue
-		}
-		d := new(MonGetExplainStream)
-		if err := renderStruct(d, line); err != nil {
-			log.Warn(err)
-			continue
-		}
-		ms = append(ms, d)
-	}
-	return ms, nil
-}
-
-func (m *MonGetExplain) GetOperator() ([]*MonGetExplainOperator, error) {
-	return m.getOperator()
-}
-func (m *MonGetExplain) GetStream() ([]*MonGetExplainStream, error) {
-	return m.getStream()
 }
 
 //执行计划
@@ -216,8 +250,8 @@ type MonGetExplainObj struct {
 	SrcName       string    `column:"SOURCE_NAME"`
 	SrcSchema     string    `column:"SOURCE_SCHEMA"`
 	ExplnLevel    string    `column:"EXPLAIN_LEVEL"`
-	StmtNo        int       `column:"STMTNO"`
-	SectionNo     int       `column:"SECTNO"`
+	StmtNo        int64     `column:"STMTNO"`
+	SectionNo     int64     `column:"SECTNO"`
 	ObjSchema     string    `column:"OBJECT_SCHEMA"`
 	ObjName       string    `column:"OBJECT_NAME"`
 	ObjType       string    `column:"OBJECT_TYPE"`
@@ -278,8 +312,8 @@ type MonGetExplainOperator struct {
 	SrcName    string    `column:"SOURCE_NAME"`
 	SrcSchema  string    `column:"SOURCE_SCHEMA"`
 	ExplnLevel string    `column:"EXPLAIN_LEVEL"`
-	StmtNo     int       `column:"STMTNO"`
-	SectionNo  int       `column:"SECTNO"`
+	StmtNo     int64     `column:"STMTNO"`
+	SectionNo  int64     `column:"SECTNO"`
 	OpId       int64     `column:"OPERATOR_ID"` //在一个explain中唯一
 	OPType     string    `column:"OPERATOR_TYPE"`
 	TotalCost  int       `column:"TOTAL_COST"`
@@ -290,7 +324,7 @@ type MonGetExplainOperator struct {
 type MonGetExplainOperatorList []*MonGetExplainOperator
 
 //根据operatorid返回该operator
-func (m MonGetExplainOperatorList) LookupOperatorById(operatorId int64) (*MonGetExplainOperator, bool) {
+func (m MonGetExplainOperatorList) lookupOperatorById(operatorId int64) (*MonGetExplainOperator, bool) {
 	for i, _ := range m {
 		if m[i].OpId == operatorId && operatorId != -1 {
 			return m[i], true
@@ -306,19 +340,69 @@ type MonGetExplainStream struct {
 	ExplnReq    string    `column:"EXPLAIN_REQUESTER"` //explain的发起者
 	ExplnTime   string    `column:"EXPLAIN_TIME"`
 	ExplnLevel  string    `column:"EXPLAIN_LEVEL"`
-	StmtNo      int       `column:"STMTNO"`
-	SectionNo   int       `column:"SECTNO"`
-	StreamId    int       `column:"STREAM_ID"`     //每一个执行计划中streamId唯一
+	StmtNo      int64     `column:"STMTNO"`
+	SectionNo   int64     `column:"SECTNO"`
+	StreamId    int64     `column:"STREAM_ID"`     //每一个执行计划中streamId唯一
 	SrcType     string    `column:"SOURCE_TYPE"`   //O:Operator,D:Data Object
-	SrcId       int       `column:"SOURCE_ID"`     //-1 if TARGET_TYPE is 'D',可认为是当前Id
+	SrcId       int64     `column:"SOURCE_ID"`     //source operator id;-1 if TARGET_TYPE is 'D',可认为是当前Id
 	SrcOpType   string    `column:"OPERATOR_TYPE"` //返回源操作的类型
 	SrcOpCost   int       `column:"TOTAL_COST"`    //返回源操作的总代价
 	TgtType     string    `column:"TARGET_TYPE"`   //O:Operator,D:Data Object
-	TgtId       int       `column:"TARGET_ID"`     //-1 if TARGET_TYPE is 'D',可认为是ParentId
+	TgtId       int64     `column:"TARGET_ID"`     //target operator id;;-1 if TARGET_TYPE is 'D',可认为是ParentId
 	ObjSchema   string    `column:"OBJECT_SCHEMA"` //Schema to which the affected data object belongs. Set to null if both SOURCE_TYPE and TARGET_TYPE are 'O'
 	ObjName     string    `column:"OBJECT_NAME"`   //Name of the object that is the subject of data stream. Set to null if both SOURCE_TYPE and TARGET_TYPE are 'O'
 	StreamCount int       `column:"STREAM_COUNT"`  //Estimated cardinality of data stream.
 	ColCount    int       `column:"COLUMN_COUNT"`  //Number of columns in data stream.
-	PredicateId int       `column:"PREDICATE_ID"`  //If this stream is part of a subquery for a predicate, the predicate ID will be reflected here, otherwise the column is set to -1.
+	//PredicateId 	int64       `column:"PREDICATE_ID"`  //If this stream is part of a subquery for a predicate, the predicate ID will be reflected here, otherwise the column is set to -1.
 
+}
+
+//获取执行计划的predicate信息，一个operator可能有多个predicate
+type MonGetExplainPredicate struct {
+	SnapTime     time.Time `column:"CURRENT TIMESTAMP"`
+	ExplnReq     string    `column:"EXPLAIN_REQUESTER"` //explain的发起者
+	ExplnTime    string    `column:"EXPLAIN_TIME"`
+	ExplnLevel   string    `column:"EXPLAIN_LEVEL"`
+	StmtNo       int64     `column:"STMTNO"`
+	SectionNo    int64     `column:"SECTNO"`
+	OperatorId   int64     `column:"OPERATOR_ID"`   //Unique ID for this operator within this query
+	PredicateId  int64     `column:"PREDICATE_ID"`  //Unique ID for this predicate for the specified operator,A value of "-1" is shown for operator predicates constructed by the Explain tool which are not optimizer objects and do not exist in the optimizer plan.
+	HowApplied   string    `column:"HOW_APPLIED"`   // 重要指标,How predicate is being used by the specified operator
+	RelopType    string    `column:"RELOP_TYPE"`    //重要指标The type of relational operator used in this predicate
+	FilterFactor int       `column:"FILTER_FACTOR"` //The estimated fraction of rows that will be qualified by this predicate.A value of "-1" is shown when FILTER_FACTOR is not applicable. FILTER_FACTOR is not applicable for operator predicates constructed by the Explain tool which are not optimizer objects and do not exist in the optimizer plan.
+	TgtId        int       `column:"TARGET_ID"`     //-1 if TARGET_TYPE is 'D',可认为是ParentId
+	ObjSchema    string    `column:"OBJECT_SCHEMA"` //Schema to which the affected data object belongs. Set to null if both SOURCE_TYPE and TARGET_TYPE are 'O'
+	ObjName      string    `column:"OBJECT_NAME"`   //Name of the object that is the subject of data stream. Set to null if both SOURCE_TYPE and TARGET_TYPE are 'O'
+	StreamCount  int       `column:"STREAM_COUNT"`  //Estimated cardinality of data stream.
+	ColCount     int       `column:"COLUMN_COUNT"`  //Number of columns in data stream.
+}
+
+//根据operatorid返回该操作下的所有predicate操作
+type MonGetExplainPredicateList []*MonGetExplainPredicate
+
+func (m MonGetExplainPredicateList) lookupPredicatesByOperatorId(operatorId int64) (MonGetExplainPredicateList, bool) {
+	result := make([]*MonGetExplainPredicate, 0)
+	for _, v := range m {
+		if v.OperatorId == operatorId {
+			result = append(result, v)
+		}
+	}
+	if len(result) > 0 {
+		return result, true
+	} else {
+		return result, false
+	}
+
+}
+
+//检查指定operatorId内的预测中是否存在指定HOW_APPLIED
+func (m MonGetExplainPredicateList) hasAppliedByOperatorId(operatorId int64, howApplied string) bool {
+	if predicates, ok := m.lookupPredicatesByOperatorId(operatorId); ok {
+		for _, v := range predicates {
+			if v.HowApplied == howApplied {
+				return true
+			}
+		}
+	}
+	return false
 }
