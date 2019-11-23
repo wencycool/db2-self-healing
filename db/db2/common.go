@@ -201,3 +201,17 @@ func ByteSizeFormat(m int) string {
 	}
 	return strconv.Itoa(s.m) + s.unit
 }
+
+//对于DB来讲没有结果则返回1
+func checkDbErr(err error) error {
+	if err == nil {
+		return err
+	}
+	if strings.Contains(err.Error(), "exit status") {
+		d := strings.TrimSpace(strings.TrimPrefix(err.Error(), "exit status"))
+		if v, err := strconv.Atoi(d); err == nil && (v == 1 || v == 0) {
+			return nil
+		}
+	}
+	return err
+}

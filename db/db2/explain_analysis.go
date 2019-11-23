@@ -3,7 +3,7 @@ package db2
 //进行explain经验性分析
 
 //是否有hashJoin
-func (m *MonGetExplain) HashHsjoin() bool {
+func (m *MonGetExplain) HasHSJoin() bool {
 	return m.planNode.hasHSJoin()
 }
 
@@ -25,4 +25,9 @@ func (m *MonGetExplain) HasIdxSargePredicate() bool {
 //预计产生多少行读
 func (m *MonGetExplain) PredicateRowsScan() int {
 	return m.planNode.predicateRowsScan()
+}
+
+//获取执行计划涉及到的对象信息
+func (m *MonGetExplain) GetObjs() []*MonGetExplainObj {
+	return m.objs
 }

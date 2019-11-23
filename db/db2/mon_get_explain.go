@@ -73,6 +73,7 @@ FOR1:
 		return nil, err
 	}
 	if self.predicates, err = self.getPredicate(); err != nil {
+		//可能不存在predicates
 		return nil, err
 	}
 	self.planNode = newNode(self.streams)
@@ -102,7 +103,7 @@ func (m *MonGetExplain) getOperator() ([]*MonGetExplainOperator, error) {
 	cmd := exec.Command("db2", "-x", argSql)
 	//找到相关字段以后进行字段解析
 	bs, err := cmd.CombinedOutput()
-	if err != nil {
+	if checkDbErr(err) != nil {
 		return nil, errors.New(string(bs))
 	}
 	ms := make([]*MonGetExplainOperator, 0)
@@ -129,7 +130,7 @@ func (m *MonGetExplain) getStream() ([]*MonGetExplainStream, error) {
 	cmd := exec.Command("db2", "-x", argSql)
 	//找到相关字段以后进行字段解析
 	bs, err := cmd.CombinedOutput()
-	if err != nil {
+	if checkDbErr(err) != nil {
 		return nil, errors.New(string(bs))
 	}
 	ms := make([]*MonGetExplainStream, 0)
@@ -155,7 +156,7 @@ func (m *MonGetExplain) getObj() ([]*MonGetExplainObj, error) {
 	cmd := exec.Command("db2", "-x", argSql)
 	//找到相关字段以后进行字段解析
 	bs, err := cmd.CombinedOutput()
-	if err != nil {
+	if checkDbErr(err) != nil {
 		return nil, errors.New(string(bs))
 	}
 	ms := make([]*MonGetExplainObj, 0)
@@ -220,7 +221,7 @@ func (m *MonGetExplain) getPredicate() ([]*MonGetExplainPredicate, error) {
 	cmd := exec.Command("db2", "-x", argSql)
 	//找到相关字段以后进行字段解析
 	bs, err := cmd.CombinedOutput()
-	if err != nil {
+	if checkDbErr(err) != nil {
 		return nil, errors.New(string(bs))
 	}
 	ms := make([]*MonGetExplainPredicate, 0)
@@ -420,3 +421,13 @@ func (m MonGetExplainPredicateList) hasAppliedByOperatorId(operatorId int64, how
 	}
 	return false
 }
+
+/*
+objects,stream,operator,predicate表中explain_level唯一,均为s
+When a section explain has generated an explain output, the EXPLAIN_LEVEL column is set to value S. It is important to note that the EXPLAIN_LEVEL column is part of the primary key of the table and part of the foreign key of most other EXPLAIN tables; hence, this EXPLAIN_LEVEL value will also be present in those other tables.
+
+In the EXPLAIN_STATEMENT table, the remaining column values that are usually associated with a row with EXPLAIN_LEVEL = P, are instead present when EXPLAIN_LEVEL = S, with the exception of SNAPSHOT. SNAPSHOT is always NULL when EXPLAIN_LEVEL is S.
+
+If the original statement was not available at the time the section explain was generated (for example, if the statement text was not provided to the EXPLAIN_FROM_DATA procedure), STATEMENT_TEXT is set to the string UNKNOWN when EXPLAIN_LEVEL is set to O.
+
+*/

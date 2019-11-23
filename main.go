@@ -149,51 +149,47 @@ func main() {
 		//执行计划分析
 		expln, err := db2.NewMonGetExplain(act.HexId)
 		if err != nil {
-			fmt.Println(err)
+			continue
 		} else {
 			//获取执行计划上的对象信息
-			if objs, err := expln.GetObj(); err != nil {
-				fmt.Println(err)
-			} else {
-				runstatsTableList := make([]*db2.MonGetExplainObj, 0)
-				for _, obj := range objs {
-					fmt.Printf("    对象信息:,对象类型:%-10s,对象名:%-20s,统计信息记录数:%-10d,最近变更记录数:%-10d,"+
-						"索引FuKCard值:%-10d,是否小表突变?(%s)\n",
-						obj.ObjType, obj.ObjName, obj.RowCount, obj.SRowsModified, obj.FUKCard,
-						PrintColorf(obj.RowCount < obj.SRowsModified, obj.RowCount < obj.SRowsModified))
-					//如果变更记录过大则搜集统计信息
-					if obj.RowCount < obj.SRowsModified && obj.ObjType == "TA" {
-						runstatsTableList = append(runstatsTableList, obj)
-					}
-				}
-				for _, obj := range runstatsTableList {
-					//推荐做统计信息搜集
-					//当数据大于1000万则做system抽样，不要用BERNOULLI抽样并不会加快速度
-					tablesampledRatio := 100
-					if (obj.RowCount + obj.SRowsModified) > 10000000 {
-						tablesampledRatio = 20
-					}
-					fmt.Printf("    推荐执行:runstats on table %s.%s with distribution on all columns and sampled detailed index all allow write access tablesample system (%d)\n",
-						obj.ObjSchema, obj.ObjName, tablesampledRatio)
+			objs := expln.GetObjs()
+			runstatsTableList := make([]*db2.MonGetExplainObj, 0)
+			for _, obj := range objs {
+				fmt.Printf("    对象信息:,对象类型:%-10s,对象名:%-20s,统计信息记录数:%-10d,最近变更记录数:%-10d,"+
+					"索引FuKCard值:%-10d,是否小表突变?(%s)\n",
+					obj.ObjType, obj.ObjName, obj.RowCount, obj.SRowsModified, obj.FUKCard,
+					PrintColorf(obj.RowCount < obj.SRowsModified, obj.RowCount < obj.SRowsModified))
+				//如果变更记录过大则搜集统计信息
+				if obj.RowCount < obj.SRowsModified && obj.ObjType == "TA" {
+					runstatsTableList = append(runstatsTableList, obj)
 				}
 			}
-			//获取stream信息
-			streams, err := expln.GetStream()
-			if err != nil {
-				fmt.Printf("打印Node报错：%s\n", err)
-			} else {
-				streamNode := db2.NewNode(streams)
-				//streamNode.PrintData()
-				t1 := time.Now()
-				fmt.Printf("      检查是否包含HashJoin			%s    	--高并发交易SQL不应出现\n", PrintColorf(streamNode.HasHSJoin(), streamNode.HasHSJoin()))
-				fmt.Printf("      检查NLJoin右子树是否包含IXAND:		%s    	--高并发交易SQL不应出现\n", PrintColorf(streamNode.HasRightOperatorIXAnd(), streamNode.HasRightOperatorIXAnd()))
-				fmt.Printf("      检查NLJoin右子树是否包含TabScan：	%s		--任何SQL不应出现\n", PrintColorf(streamNode.HasRightOperatorTabScan(), streamNode.HasRightOperatorTabScan()))
-				fmt.Printf("      打印一共花费时长:%s\n", time.Now().Sub(t1).String())
+			for _, obj := range runstatsTableList {
+				//推荐做统计信息搜集
+				//当数据大于1000万则做system抽样，不要用BERNOULLI抽样并不会加快速度
+				tablesampledRatio := 100
+				if (obj.RowCount + obj.SRowsModified) > 10000000 {
+					tablesampledRatio = 20
+				}
+				fmt.Printf("    推荐执行:runstats on table %s.%s with distribution on all columns and sampled detailed index all allow write access tablesample system (%d)\n",
+					obj.ObjSchema, obj.ObjName, tablesampledRatio)
 			}
-
 		}
+		var rowsRead int
+		if pkgCacheStmt.Executions != 0 {
+			rowsRead = pkgCacheStmt.RowsRead / pkgCacheStmt.Executions
+		} else if act.ActCount != 0 {
+			rowsRead = act.RowsRead * 2 / act.ActCount //切片信息接近中位数
+		} else {
+			rowsRead = -1
+		}
+		t1 := time.Now()
+		fmt.Printf("      检查是否包含HashJoin			%s    	--高并发交易SQL不应出现\n", PrintColorf(expln.HasHSJoin(), expln.HasHSJoin()))
+		fmt.Printf("      检查NLJoin右子树是否包含IXAND:		%s    	--高并发交易SQL不应出现\n", PrintColorf(expln.HasRightOperatorIXAnd(), expln.HasRightOperatorIXAnd()))
+		fmt.Printf("      检查NLJoin右子树是否包含TabScan:		%s		--任何SQL不应出现\n", PrintColorf(expln.HasRightOperatorTabScan(), expln.HasRightOperatorTabScan()))
+		fmt.Printf("      执行计划预估需要行读数:%-10d,实际行读[或当前行读]:%-10d     --如果预估行读过大或者实际行读远大于（5倍以上）预估行读，则执行计划存在问题\n", expln.PredicateRowsScan(), rowsRead)
+		fmt.Printf("      打印一共花费时长:%s\n", time.Now().Sub(t1).String())
 		fmt.Printf("    打印Advis信息,执行语句:db2advis -d %s -s \"%s\" -q %s -n %s \n", dbname, pkgCacheStmt.StmtText, act.AuthId, act.AuthId)
-
 	}
 	//测试执行计划
 
