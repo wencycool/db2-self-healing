@@ -1,7 +1,6 @@
 package db2
 
 import (
-	"bytes"
 	"errors"
 	"os/exec"
 	"os/user"
@@ -25,6 +24,7 @@ func GetCurInstanceName() (string, error) {
 	*/
 }
 
+/*
 //优先通过DB2环境变量获取
 func getCurInstance1() string {
 	bs, err := exec.Command("db2", "get current instance").CombinedOutput()
@@ -51,6 +51,7 @@ func getCurInstance2() string {
 	return ""
 }
 
+*/
 //获取当前实例下数据库列表
 func GetCurDatabases() ([]*DbEntiry, error) {
 	entryList := make([]*DbEntiry, 0)

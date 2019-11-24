@@ -8,6 +8,8 @@ import (
 	"time"
 )
 
+//获取操作系统资源使用情况，但是必须捕获一个时间间隔之内的使用情况
+
 //获取OS资源使用情况
 type OsResource struct {
 	SnapTime        time.Time `column:"CURRENT TIMESTAMP"`
