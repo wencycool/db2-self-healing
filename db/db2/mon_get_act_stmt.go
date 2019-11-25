@@ -42,8 +42,8 @@ type MonGetActStmt struct {
 	PoolTmpIPReads  int       `column:"POOL_INDEX_P_READS"`
 	ActiveHashJoins int       `column:"ACTIVE_HASH_JOINS"`
 	ActiveSorts     int       `column:"ACTIVE_SORTS"`
-	HashJoins       int       `column:"TOTAL_HASH_JOINS"`
-	HashLoops       int       `column:"TOTAL_HASH_LOOPS"`
+	HashJoins       int       `column:"TOTAL_HASH_JOINS"` //一个语句中不应该出现太多hash joins
+	HashLoops       int       `column:"TOTAL_HASH_LOOPS"` //一个语句中不应该出现hashloop
 	HashFlows       int       `column:"HASH_JOIN_OVERFLOWS"`
 	AuthId          string    `column:"SESSION_AUTH_ID"` //从agent中获取
 	AppId           string    `column:"APPLICATION_ID"`  //从agent中获取

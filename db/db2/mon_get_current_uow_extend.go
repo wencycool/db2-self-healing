@@ -67,6 +67,7 @@ func (m *MonGetCurUowExtend) GetSqlText() string {
 1. 该app持有多少日志量；2. 该事务是否包含了DDL语句？ 防止包含不记录日志操作的DDL语句导致表损坏。
 其它层面还包括app是否处于可杀状态，如rollforward；是否处于rebuild index状态，杀掉还是会重做影响时间，比如reorg的最后rebuild index阶段。
 以及其它很多条件，但是最为自动运维这些条件并不是最重要的，先满足上面两点即可
+策略分级：1.全杀 2.存在大事务，DDL语句的不杀 3.出2以外，write DML的不杀，即只杀read DML的
 */
 func (m *MonGetCurUowExtend) CanForce() (canforce bool, msg string) {
 	switch {
