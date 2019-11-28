@@ -70,3 +70,12 @@ func LookupMonGetUtilByUtilInvId(utils []*MonGetUtil, UtilInvId string) (*MonGet
 	}
 	return nil, false
 }
+
+func LookupMonGetUtilByAppHandle(utils []*MonGetUtil, handle int64) (*MonGetUtil, bool) {
+	for _, u := range utils {
+		if u.AppHandle == handle {
+			return u, true
+		}
+	}
+	return nil, false
+}

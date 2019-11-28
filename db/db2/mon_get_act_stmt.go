@@ -84,13 +84,29 @@ func GetMonGetActStmtList(str string) []*MonGetActStmt {
 		if err := renderStruct(d, line); err != nil {
 			continue
 		}
-		//如果agent空闲状态，即处于等待状态，则当做正在执行的SQL语句
-		if d.EventState == "IDLE" {
+		if d.AppId == CurrentAppId() {
 			continue
 		}
 		ms = append(ms, d)
 	}
 	return ms
+}
+
+func GetMonGetActStmtMaxLevelList(acts []*MonGetActStmt) []*MonGetActStmt {
+	tmp_map := make(map[int64]*MonGetActStmt)
+	for _, act := range acts {
+		if a, ok := tmp_map[act.AppHandle]; ok && a.NestLevel < act.NestLevel {
+			tmp_map[act.AppHandle] = act
+		} else {
+			tmp_map[act.AppHandle] = act
+		}
+	}
+	result := make([]*MonGetActStmt, 0)
+	for _, act := range tmp_map {
+		result = append(result, act)
+	}
+	return result
+
 }
 
 //对于当前正在执行的最内层的SQL语句（包含锁等待语句），排除处于等待状态的SQL
