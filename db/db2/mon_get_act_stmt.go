@@ -67,7 +67,7 @@ func (m *MonGetActStmt) GetSqlText() string {
 	return genSql(m)
 }
 
-//通过从数据库返回的结果，生成结果集,处于锁等待或者其他等待状态的不当做正在执行的SQL语句
+//通过从数据库返回的结果，生成结果集,包括等待状态的SQL
 func GetMonGetActStmtList(str string) []*MonGetActStmt {
 	m := NewMonGetActStmt()
 	ms := make([]*MonGetActStmt, 0)
@@ -91,6 +91,29 @@ func GetMonGetActStmtList(str string) []*MonGetActStmt {
 		ms = append(ms, d)
 	}
 	return ms
+}
+
+//对于当前正在执行的最内层的SQL语句（包含锁等待语句），排除处于等待状态的SQL
+func GetMonGetActStmtNoWaitList(acts []*MonGetActStmt) []*MonGetActStmt {
+	//找出最大的nestLevel
+	tmp_map := make(map[int64]*MonGetActStmt)
+	for _, act := range acts {
+		if a, ok := tmp_map[act.AppHandle]; ok && a.NestLevel < act.NestLevel {
+			tmp_map[act.AppHandle] = act
+		} else {
+			tmp_map[act.AppHandle] = act
+		}
+	}
+	result := make([]*MonGetActStmt, 0)
+	for _, act := range tmp_map {
+		if act.EventState == "IDLE" {
+			continue
+		}
+		//检查看之前是否已经有该agent正在执行的语句
+
+		result = append(result, act)
+	}
+	return result
 }
 
 //根据当前的mon_get_activity的palnid发生聚合，将所有int类型指标进行聚合，将所有其它类型指标进行更新
