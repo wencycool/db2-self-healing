@@ -97,6 +97,9 @@ func GetMonGetCurUowExtendList(str string) []*MonGetCurUowExtend {
 		if err := renderStruct(d, line); err != nil {
 			continue
 		}
+		if d.AppId == CurrentAppId() {
+			continue
+		}
 		ms = append(ms, d)
 	}
 	return ms
