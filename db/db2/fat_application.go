@@ -15,7 +15,7 @@ func CurrentAppId() string {
 	if curAppId != "" {
 		return curAppId
 	}
-	bs, err := exec.Command("db2", "-x", "values application_id()").CombinedOutput()
+	bs, err := exec.Command("db2", "-x", "+p", "values application_id()").CombinedOutput()
 	if err != nil {
 		return ""
 	}
@@ -26,7 +26,7 @@ func CurrentAppHandle() int64 {
 	if curAppHandle != 0 {
 		return curAppHandle
 	}
-	bs, err := exec.Command("db2", "-x", "values mon_get_application_handle()").CombinedOutput()
+	bs, err := exec.Command("db2", "-x", "+p", "values mon_get_application_handle()").CombinedOutput()
 	if err != nil {
 		return -1
 	}
@@ -133,9 +133,15 @@ func (f *FatUowApplication) forceApp(level ForceApplicationLevelType) (forced bo
 	if f.isForced {
 		return true, "Application handle已经被杀掉了"
 	}
-	exec.Command("db2", fmt.Sprintf(" \"force application(%d)\"", f.uow.AppHandle)).CombinedOutput()
-	f.isForced = true
-	return true, fmt.Sprintf("Application Handle:%d forced sucessfully", f.uow.AppHandle)
+	bs, err := exec.Command("db2", fmt.Sprintf("force application(%d)", f.uow.AppHandle)).CombinedOutput()
+	if checkDbErr(err) != nil {
+		f.isForced = false
+		return true, fmt.Sprintf("Application Handle:%d forced error!,msg:%s", f.uow.AppHandle, string(bs))
+	} else {
+		f.isForced = true
+		return true, fmt.Sprintf("Application Handle:%d forced sucessfully", f.uow.AppHandle)
+	}
+
 }
 
 type FatUowApplicationList []*FatUowApplication
