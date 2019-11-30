@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/sirupsen/logrus"
+	"math"
 	"os/exec"
 	"reflect"
 	"strconv"
@@ -214,4 +215,14 @@ func checkDbErr(err error) error {
 		}
 	}
 	return err
+}
+
+func MaxInt(a ...int) int {
+	max := math.MinInt64
+	for _, v := range a {
+		if v > max {
+			max = v
+		}
+	}
+	return max
 }

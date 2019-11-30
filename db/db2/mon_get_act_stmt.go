@@ -28,6 +28,7 @@ type MonGetActStmt struct {
 	ActWTime        int       `column:"TOTAL_ACT_WAIT_TIME"`
 	LockWTime       int       `column:"LOCK_WAIT_TIME"`
 	LatchTime       int       `column:"TOTAL_EXTENDED_LATCH_WAIT_TIME"`
+	RowsReturned    int       `column:"ROWS_RETURNED"`
 	RowsRead        int       `column:"ROWS_READ"`
 	RowsDelete      int       `column:"ROWS_DELETED"`
 	RowsInsert      int       `column:"ROWS_INSERTED"`

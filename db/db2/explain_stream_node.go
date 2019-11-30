@@ -110,7 +110,7 @@ func (s *Stack) len() int {
 }
 
 //打印root节点所有数据
-func (n *Node) PrintData() {
+func (n *Node) printData() {
 	rep := "    "
 	if n.ParentId != math.MaxInt16 {
 		fmt.Printf("%s", strings.Repeat(rep, n.Level))
@@ -126,7 +126,7 @@ func (n *Node) PrintData() {
 	}
 	for _, v := range n.NextList {
 		fmt.Printf("%s", "  ")
-		v.PrintData()
+		v.printData()
 	}
 }
 
@@ -165,11 +165,13 @@ func (n *Node) hasAnyJoins() bool {
 
 //查看是否包含Join节点，如果包含则返回true,当opType节点名为ALL的时候判断所有Join类型节点
 func (n *Node) hasJoins(opType string) bool {
+	//fmt.Println("--",n.Stream.SrcId,n.Stream.SrcOpType)
 	stack := new(Stack)
 	stack.push(n)
-	if !stack.isEmpty() {
+	for !stack.isEmpty() {
 		nd := stack.pop()
 		//如果nd有且只有两个节点，那么nd为JOIN节点
+		//fmt.Println(nd.Stream.SrcId,nd.Stream.SrcOpType)
 		if len(nd.NextList) == 2 && (nd.Stream.SrcOpType == "NLJOIN" || nd.Stream.SrcOpType == "HSJOIN" || nd.Stream.SrcOpType == "MSJOIN") {
 			if strings.ToUpper(opType) == "ALL" || nd.Stream.SrcOpType == opType {
 				return true
@@ -187,7 +189,7 @@ func (n *Node) numberJoins(opType string) int {
 	cnt := 0
 	stack := new(Stack)
 	stack.push(n)
-	if !stack.isEmpty() {
+	for !stack.isEmpty() {
 		nd := stack.pop()
 		//如果nd有且只有两个节点，那么nd为JOIN节点
 		if len(nd.NextList) == 2 && (nd.Stream.SrcOpType == "NLJOIN" || nd.Stream.SrcOpType == "HSJOIN" || nd.Stream.SrcOpType == "MSJOIN") {
@@ -609,6 +611,15 @@ func (n *Node) hasIdxSargePredicate(predicateList MonGetExplainPredicateList) bo
 	return false
 }
 
+//----------------------------------------慢查询情况常见错误执行计划分析-------------------------------------//
+//在一条SQL执行非常缓慢的时候常见的有如下几点:
+// 1. load场景，数据量大，索引多rebuild时间长，主要发生在rebuild时间；reorg场景，runstats场景等，这些不涉及执行计划剔除
+// 2. 一个存储过程中嵌套多个SQL循环语句，每一个SQL执行可能不是特别慢，但是循环次数太多导致时间增加较多
+// 3. 一条SQL实际执行时间过长,这个是最为常见最容易出问题的地方，从执行计划结合快照主要分析此类语句。分析方法：
+// 是否涉及到排序？ 是否出现了hashloop？ 是否表读记录数极多？是否出现了大量的索引扫描？ 是否出现了大量的临时表空间读写？不管哪种问题，作为自动推荐
+//最常见的方式为：1. 统计信息是否合理？ 2. 索引是否多余？是否缺失？ 3. 是否数据量突增导致缓慢为正常现象,数据清理?
+//对于NLJOIN+uniq索引（左侧结果集过大）两个大表的情况下，可能会发生较多的物理索引读，因此可能会存在问题，应该改为hashJoin
+
 //数据发生倾斜导致问题
 //条件范围内，数据发生倾斜导致问题(比如一天之内发生严重倾斜)
 //执行计划中往往存在数据分布倾斜的问题导致数据不准确，比如整体表数据量非常巨大，但是一天之内做大量的变更。
@@ -620,6 +631,9 @@ func (n *Node) hasIdxSargePredicate(predicateList MonGetExplainPredicateList) bo
 //MSJOIN=a+b;HSJOIN=a+b;NLjoin=a*b
 //叶子节点的父节点为TBSCAN,或者fetch（IX操作+TABSCAN)操作
 //根据执行计划预测需要扫描多少行数据,在pkg_cache中对应的rowsread的值如果小于此值，则执行计划评估准确
+//如果出现快照中fetch rows大于预估行读或者预期结果记录数,那么则存在严重的笛卡尔积
+
+//该函数用来评估基本所有基本表预估，以及中间结果集预估作为总体行读预估。
 func (n *Node) predicateRowsScan() int {
 	//NLJOIN,HSJOIN,MSJOIN   #ZZJOIN暂不考虑
 	//大于2个节点的节点不作考虑，多节点情况不会涉及join问题
@@ -632,16 +646,26 @@ func (n *Node) predicateRowsScan() int {
 	for len(cursor.NextList) == 1 && cursor.NextList[0].Stream.SrcId != -1 {
 		cursor = cursor.NextList[0]
 	}
-	//处理tabscan的情况
+	//处理tabscan的情况 //索引情况暂时不排除
 	if len(cursor.NextList) == 1 && cursor.NextList[0].Stream.SrcType == "D" {
 		return cursor.NextList[0].Stream.StreamCount
 	}
 	//处理IX+TABSCAN的情况
-	if len(cursor.NextList) == 2 && cursor.NextList[1].Stream.SrcType == "D" {
-		return cursor.NextList[0].Stream.StreamCount
+	if len(cursor.NextList) == 2 && cursor.NextList[1].Stream.SrcType == "D" && cursor.Stream.SrcOpType == "FETCH" {
+		//return cursor.NextList[0].Stream.StreamCount
+		//返回索引+数据的结果集
+		return cursor.Stream.StreamCount
 	}
 	if cursor.Stream.SrcOpType == "NLJOIN" {
-		return cursor.NextList[0].predicateRowsScan() + cursor.NextList[0].predicateRowsScan()*cursor.NextList[1].predicateRowsScan()
+		//-1为了减少第一次两侧表预读的误差
+		switch {
+		case cursor.NextList[1].hasAnyJoins():
+			//fmt.Println(cursor.NextList[0].predicateRowsScan(),cursor.NextList[0].Stream.StreamCount,cursor.NextList[1].Stream.StreamCount)
+			return cursor.NextList[0].predicateRowsScan() + cursor.NextList[1].predicateRowsScan() + MaxInt((cursor.NextList[0].Stream.StreamCount-1)*(cursor.NextList[1].Stream.StreamCount-1), 0)
+		default:
+			return cursor.NextList[0].predicateRowsScan() + MaxInt((cursor.NextList[0].Stream.StreamCount-1)*cursor.NextList[1].predicateRowsScan(), 0)
+		}
+
 	}
 	//在评估hashJoin和msJoin的时候左子树如果存在Join，那么很难评估行扫描数，因为每次都要包含左子树的结果集需要重新遍历，因此这里采用执行计划的评估扫描结果集
 	//add + cursor.NextList[0].Stream.StreamCount + cursor.NextList[1].Stream.StreamCount 2019-11-30
@@ -662,14 +686,39 @@ func (n *Node) predicateRowsScan() int {
 			return cursor.NextList[0].predicateRowsScan() + cursor.NextList[1].predicateRowsScan()
 		}
 	}
+
 	return 0
 }
 
-//----------------------------------------慢查询情况常见错误执行计划分析-------------------------------------//
-//在一条SQL执行非常缓慢的时候常见的有如下几点:
-// 1. load场景，数据量大，索引多rebuild时间长，主要发生在rebuild时间；reorg场景，runstats场景等，这些不涉及执行计划剔除
-// 2. 一个存储过程中嵌套多个SQL循环语句，每一个SQL执行可能不是特别慢，但是循环次数太多导致时间增加较多
-// 3. 一条SQL实际执行时间过长,这个是最为常见最容易出问题的地方，从执行计划结合快照主要分析此类语句。分析方法：
-// 是否涉及到排序？ 是否出现了hashloop？ 是否表读记录数极多？是否出现了大量的索引扫描？ 是否出现了大量的临时表空间读写？不管哪种问题，作为自动推荐
-//最常见的方式为：1. 统计信息是否合理？ 2. 索引是否多余？是否缺失？ 3. 是否数据量突增导致缓慢为正常现象,数据清理?
-//对于NLJOIN+uniq索引（左侧结果集过大）两个大表的情况下，可能会发生较多的物理索引读，因此可能会存在问题，应该改为hashJoin
+//该函数返回用来预测结果集上限，有一些应用可能存在重复插入数据的情况导致出现了笛卡尔积的结果集，那么生成的结果会比扫描过得基本表记录还要大很多。
+//通过这里预估结果集上限结合mon_get_activity表函数（大于10秒才会有记录）来判断当前的SQL行为是否有产生笛卡尔积的行为
+func (n *Node) predicateMaxRowsFetched() int {
+	//NLJOIN,HSJOIN,MSJOIN   #ZZJOIN暂不考虑
+	//大于2个节点的节点不作考虑，多节点情况不会涉及join问题
+	var cursor *Node
+	cursor = n
+	if len(cursor.NextList) > 2 {
+		return 0
+	}
+	//如果一直是1个节点那么进行下探
+	for len(cursor.NextList) == 1 && cursor.NextList[0].Stream.SrcId != -1 {
+		cursor = cursor.NextList[0]
+	}
+	//处理tabscan的情况
+	if len(cursor.NextList) == 1 && cursor.NextList[0].Stream.SrcType == "D" {
+		return cursor.NextList[0].Stream.StreamCount
+	}
+	//处理IX+TABSCAN的情况
+	if len(cursor.NextList) == 2 && cursor.NextList[1].Stream.SrcType == "D" {
+		return cursor.NextList[0].Stream.StreamCount
+	}
+	if cursor.Stream.SrcOpType == "NLJOIN" || cursor.Stream.SrcOpType == "HSJOIN" || cursor.Stream.SrcOpType == "MSJOIN" {
+		return MaxInt(cursor.NextList[0].predicateMaxRowsFetched(), cursor.NextList[1].predicateMaxRowsFetched())
+	}
+	return 0
+}
+
+//执行计划评估的结果集记录数
+func (n *Node) predicateRowsFetched() int {
+	return n.Stream.StreamCount
+}

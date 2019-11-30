@@ -27,7 +27,21 @@ func (m *MonGetExplain) PredicateRowsScan() int {
 	return m.planNode.predicateRowsScan()
 }
 
+//预计最大rows fetched
+func (m *MonGetExplain) PredicateMaxRowsFetched() int {
+	return m.planNode.predicateMaxRowsFetched()
+}
+
+//执行计划预估产生结果集
+func (m *MonGetExplain) PredicateRowsFetched() int {
+	return m.planNode.predicateRowsFetched()
+}
+
 //获取执行计划涉及到的对象信息
 func (m *MonGetExplain) GetObjs() []*MonGetExplainObj {
 	return m.objs
+}
+
+func (m *MonGetExplain) PrintData() {
+	m.planNode.printData()
 }
