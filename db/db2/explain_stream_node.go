@@ -709,7 +709,7 @@ func (n *Node) predicateMaxRowsFetched() int {
 		return cursor.NextList[0].Stream.StreamCount
 	}
 	//处理IX+TABSCAN的情况
-	if len(cursor.NextList) == 2 && cursor.NextList[1].Stream.SrcType == "D" {
+	if len(cursor.NextList) == 2 && cursor.NextList[1].Stream.SrcType == "D" && cursor.Stream.SrcOpType == "FETCH" {
 		return cursor.NextList[0].Stream.StreamCount
 	}
 	if cursor.Stream.SrcOpType == "NLJOIN" || cursor.Stream.SrcOpType == "HSJOIN" || cursor.Stream.SrcOpType == "MSJOIN" {
