@@ -159,6 +159,28 @@ func (n *Node) hasRIDScan() bool {
 func (n *Node) numberAllJoins() int {
 	return n.numberJoins("ALL")
 }
+func (n *Node) hasAnyJoins() bool {
+	return n.hasJoins("ALL")
+}
+
+//查看是否包含Join节点，如果包含则返回true,当opType节点名为ALL的时候判断所有Join类型节点
+func (n *Node) hasJoins(opType string) bool {
+	stack := new(Stack)
+	stack.push(n)
+	if !stack.isEmpty() {
+		nd := stack.pop()
+		//如果nd有且只有两个节点，那么nd为JOIN节点
+		if len(nd.NextList) == 2 && (nd.Stream.SrcOpType == "NLJOIN" || nd.Stream.SrcOpType == "HSJOIN" || nd.Stream.SrcOpType == "MSJOIN") {
+			if strings.ToUpper(opType) == "ALL" || nd.Stream.SrcOpType == opType {
+				return true
+			}
+		}
+		for _, v := range nd.NextList {
+			stack.push(v)
+		}
+	}
+	return false
+}
 
 //计算有多少个Join节点,当opType节点名为ALL的时候返回所有Join节点
 func (n *Node) numberJoins(opType string) int {
@@ -168,7 +190,7 @@ func (n *Node) numberJoins(opType string) int {
 	if !stack.isEmpty() {
 		nd := stack.pop()
 		//如果nd有且只有两个节点，那么nd为JOIN节点
-		if len(nd.NextList) == 2 {
+		if len(nd.NextList) == 2 && (nd.Stream.SrcOpType == "NLJOIN" || nd.Stream.SrcOpType == "HSJOIN" || nd.Stream.SrcOpType == "MSJOIN") {
 			if strings.ToUpper(opType) == "ALL" || nd.Stream.SrcOpType == opType {
 				cnt++
 			}
@@ -621,11 +643,24 @@ func (n *Node) predicateRowsScan() int {
 	if cursor.Stream.SrcOpType == "NLJOIN" {
 		return cursor.NextList[0].predicateRowsScan() + cursor.NextList[0].predicateRowsScan()*cursor.NextList[1].predicateRowsScan()
 	}
-	if cursor.Stream.SrcOpType == "HSJOIN" {
-		return cursor.NextList[0].predicateRowsScan() + cursor.NextList[1].predicateRowsScan()
-	}
-	if cursor.Stream.SrcOpType == "MSJOIN" {
-		return cursor.NextList[0].predicateRowsScan() + cursor.NextList[1].predicateRowsScan()
+	//在评估hashJoin和msJoin的时候左子树如果存在Join，那么很难评估行扫描数，因为每次都要包含左子树的结果集需要重新遍历，因此这里采用执行计划的评估扫描结果集
+	//add + cursor.NextList[0].Stream.StreamCount + cursor.NextList[1].Stream.StreamCount 2019-11-30
+	//对于任何Join，如果子节点存在Join，那么就需要把扫描的表记录+子结果集的累加作为源扫描记录输入
+	//假设[]中为表扫描记录数 ()中为最优先级做join，那么：
+	//(a[10] msjoin b[20])[10] msjoin c[100] 预估行读为10+20+10+100 = 140
+	//a[10] msjoin(b[20] msjoin c[100])[20] 预估行读为10 + 20 + 100 + 20 = 150
+	//因此要注意如果多层hashjoin或者msjoin，那么一定要注意尽可能的不要把大表（大结果集）放到左侧，这样子容易多次扫描大表结果集
+	if cursor.Stream.SrcOpType == "HSJOIN" || cursor.Stream.SrcOpType == "MSJOIN" {
+		switch {
+		case cursor.NextList[0].hasAnyJoins() && cursor.NextList[1].hasAnyJoins():
+			return cursor.NextList[0].predicateRowsScan() + cursor.NextList[1].predicateRowsScan() + cursor.NextList[0].Stream.StreamCount + cursor.NextList[1].Stream.StreamCount
+		case cursor.NextList[0].hasAnyJoins():
+			return cursor.NextList[0].predicateRowsScan() + cursor.NextList[1].predicateRowsScan() + cursor.NextList[0].Stream.StreamCount
+		case cursor.NextList[1].hasAnyJoins():
+			return cursor.NextList[0].predicateRowsScan() + cursor.NextList[1].predicateRowsScan() + cursor.NextList[1].Stream.StreamCount
+		default:
+			return cursor.NextList[0].predicateRowsScan() + cursor.NextList[1].predicateRowsScan()
+		}
 	}
 	return 0
 }
