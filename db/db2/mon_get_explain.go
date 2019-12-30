@@ -33,6 +33,23 @@ func NewMonGetExplain(hexid string) (*MonGetExplain, error) {
 	cmd := exec.Command("db2", "-x", argSql)
 	bs, err := cmd.CombinedOutput()
 	if err != nil {
+		if strings.Contains(string(bs), "SQL0219N") {
+			//没有安装explain表，需要进行安装
+			log.Warn("没有安装expain表，需要进行安装")
+			install_explain_sql := fmt.Sprintf("CALL SYSPROC.SYSINSTALLOBJECTS('EXPLAIN', 'C', CAST (NULL AS VARCHAR(128)), '%s')", CurrentSchema())
+			cmd := exec.Command("db2", "-x", install_explain_sql)
+			log.Warn(fmt.Sprintf("安装explain表语句为:%s", install_explain_sql))
+			bs, err := cmd.CombinedOutput()
+			if err != nil {
+				msg := fmt.Sprintf("无法安装explain表，ddl:%s,msg:%s", install_explain_sql, string(bs))
+				log.Error(msg)
+				return nil, errors.New(msg)
+			} else {
+				//已经成功安装explain表需要重新调用该函数
+				log.Warn("成功安装explain表")
+				return NewMonGetExplain(hexid)
+			}
+		}
 		return nil, errors.New(string(bs))
 	}
 	self.HexId = hexid

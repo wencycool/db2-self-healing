@@ -9,6 +9,19 @@ import (
 
 var curAppId string
 var curAppHandle int64
+var curSchema string
+
+//获取当前schema信息
+func CurrentSchema() string {
+	if curSchema != "" {
+		return curSchema
+	}
+	bs, err := exec.Command("db2", "-x", "+p", "values current schema").CombinedOutput()
+	if err != nil {
+		return ""
+	}
+	return strings.TrimSpace(string(bs))
+}
 
 //判断agent是否可以进行做force操作，主要包括是否大事务，是否包含reorg等DDL操作
 func CurrentAppId() string {
