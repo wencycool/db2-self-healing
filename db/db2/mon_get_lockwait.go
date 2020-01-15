@@ -1,6 +1,8 @@
 package db2
 
 import (
+	"bytes"
+	"os/exec"
 	"strings"
 	"time"
 )
@@ -40,8 +42,21 @@ func (m *MonGetLockWait) GetSqlText() string {
 	return genSql(m)
 }
 
+func GetMonGetLockWaitList() ([]*MonGetLockWait, error) {
+	m := NewMonGetLockWait()
+	argSql := m.GetSqlText()
+	cmd := exec.Command("db2", "+p", "-x", "-t")
+	var in bytes.Buffer
+	cmd.Stdin = &in
+	log.Debug(argSql)
+	in.WriteString(argSql)
+	bs, err := cmd.CombinedOutput()
+	result := string(bs)
+	return getMonGetLockWaitListFromStr(result), err
+}
+
 //通过从数据库返回的结果，生成结果集
-func GetMonGetLockWaitList(str string) []*MonGetLockWait {
+func getMonGetLockWaitListFromStr(str string) []*MonGetLockWait {
 	m := NewMonGetLockWait()
 	ms := make([]*MonGetLockWait, 0)
 	start := strings.Index(str, m.start_flag) + len(m.start_flag)

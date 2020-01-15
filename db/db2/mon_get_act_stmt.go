@@ -1,6 +1,8 @@
 package db2
 
 import (
+	"bytes"
+	"os/exec"
 	"reflect"
 	"sort"
 	"strings"
@@ -68,8 +70,21 @@ func (m *MonGetActStmt) GetSqlText() string {
 	return genSql(m)
 }
 
+func GetMonGetActStmtList() ([]*MonGetActStmt, error) {
+	m := NewMonGetActStmt()
+	argSql := m.GetSqlText()
+	cmd := exec.Command("db2", "+p", "-x", "-t")
+	var in bytes.Buffer
+	cmd.Stdin = &in
+	log.Debug(argSql)
+	in.WriteString(argSql)
+	bs, err := cmd.CombinedOutput()
+	result := string(bs)
+	return getMonGetActStmtListFromStr(result), err
+}
+
 //通过从数据库返回的结果，生成结果集,包括等待状态的SQL
-func GetMonGetActStmtList(str string) []*MonGetActStmt {
+func getMonGetActStmtListFromStr(str string) []*MonGetActStmt {
 	m := NewMonGetActStmt()
 	ms := make([]*MonGetActStmt, 0)
 	start := strings.Index(str, m.start_flag) + len(m.start_flag)

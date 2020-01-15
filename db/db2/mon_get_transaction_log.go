@@ -1,6 +1,8 @@
 package db2
 
 import (
+	"bytes"
+	"os/exec"
 	"strings"
 	"time"
 )
@@ -31,8 +33,21 @@ func (m *MonGetTrxLog) GetSqlText() string {
 	return genSql(m)
 }
 
+func GetMonGetTrxLogList() ([]*MonGetTrxLog, error) {
+	m := NewMonGetTrxLog()
+	argSql := m.GetSqlText()
+	cmd := exec.Command("db2", "+p", "-x", "-t")
+	var in bytes.Buffer
+	cmd.Stdin = &in
+	log.Debug(argSql)
+	in.WriteString(argSql)
+	bs, err := cmd.CombinedOutput()
+	result := string(bs)
+	return getMonGetTrxLogListFromStr(result), err
+}
+
 //通过从数据库返回的结果，生成结果集
-func GetMonGetTrxLogList(str string) []*MonGetTrxLog {
+func getMonGetTrxLogListFromStr(str string) []*MonGetTrxLog {
 	m := NewMonGetTrxLog()
 	ms := make([]*MonGetTrxLog, 0)
 	start := strings.Index(str, m.start_flag) + len(m.start_flag)

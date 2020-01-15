@@ -1,6 +1,8 @@
 package db2
 
 import (
+	"bytes"
+	"os/exec"
 	"strings"
 	"time"
 )
@@ -34,8 +36,21 @@ func (m *MonGetHadr) GetSqlText() string {
 	return genSql(m)
 }
 
+func GetMonGetHadrList() ([]*MonGetHadr, error) {
+	m := NewMonGetHadr()
+	argSql := m.GetSqlText()
+	cmd := exec.Command("db2", "+p", "-x", "-t")
+	var in bytes.Buffer
+	cmd.Stdin = &in
+	log.Debug(argSql)
+	in.WriteString(argSql)
+	bs, err := cmd.CombinedOutput()
+	result := string(bs)
+	return getMonGetHadrListFromStr(result), err
+}
+
 //通过从数据库返回的结果，生成结果集
-func GetMonGetHadrList(str string) []*MonGetHadr {
+func getMonGetHadrListFromStr(str string) []*MonGetHadr {
 	m := NewMonGetHadr()
 	ms := make([]*MonGetHadr, 0)
 	start := strings.Index(str, m.start_flag) + len(m.start_flag)

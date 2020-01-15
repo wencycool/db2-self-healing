@@ -144,13 +144,15 @@ func main() {
 			continue
 		}
 
-		fmt.Println("    对每一个SQL进行解析，检查执行计划")
-		fmt.Printf("    语句属性:PackageSchema:%-10s,PackageName:%-20s,Section:%-3d,SQLType:%-10s\n", pkgCacheStmt.PkgSchema, pkgCacheStmt.PkgName, pkgCacheStmt.Section, pkgCacheStmt.SectionType)
 		//执行计划分析
 		expln, err := db2.NewMonGetExplain(act.HexId)
 		if err != nil {
 			continue
 		} else {
+			fmt.Printf("    执行计划获取命令:\n")
+			fmt.Printf("    db2exfmt -d %s -e %% -s %% -n %% -# 0 -w %s -g -t \n", dbname, expln.ExplnTime)
+			fmt.Println("    对每一个SQL进行解析，检查执行计划")
+			fmt.Printf("    语句属性:PackageSchema:%-10s,PackageName:%-20s,Section:%-3d,SQLType:%-10s\n", pkgCacheStmt.PkgSchema, pkgCacheStmt.PkgName, pkgCacheStmt.Section, pkgCacheStmt.SectionType)
 			//获取执行计划上的对象信息
 			objs := expln.GetObjs()
 			runstatsTableList := make([]*db2.MonGetExplainObj, 0)

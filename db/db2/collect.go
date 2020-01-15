@@ -51,8 +51,8 @@ func CollectPerfData(duration time.Duration) ([]*MonGetActStmt, []*MonGetCurUowE
 	if err != nil {
 		return nil, nil, nil, nil, nil, nil, err
 	}
-	return GetMonGetActStmtList(result), GetMonGetCurUowExtendList(result), GetMonGetTrxLogList(result),
-		GetMonGetHadrList(result),
-		GetMonGetLockWaitList(result), GetMonGetUtilList(result), nil
+	return getMonGetActStmtListFromStr(result), getMonGetCurUowExtendListFromStr(result), getMonGetTrxLogListFromStr(result),
+		getMonGetHadrListFromStr(result),
+		getMonGetLockWaitListFromStr(result), getMonGetUtilListFromStr(result), nil
 
 }
